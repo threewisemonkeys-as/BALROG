@@ -192,6 +192,7 @@ def setup_environment(
     openai_tag: str = "OPENAI_API_KEY",
     gemini_tag: str = "GEMINI_API_KEY",
     anthropic_tag: str = "ANTHROPIC_API_KEY",
+    openrouter_tag: str = "OPENROUTER_API_KEY",
     organization: str = None,
     original_cwd: str = "",
 ):
@@ -211,5 +212,7 @@ def setup_environment(
         os.environ["ANTHROPIC_API_KEY"] = secrets[anthropic_tag]
     if secrets[openai_tag]:
         os.environ["OPENAI_API_KEY"] = secrets[openai_tag]
+    if secrets[openrouter_tag]:
+        os.environ["OPENROUTER_API_KEY"] = secrets[openrouter_tag]
     if organization is not None:
         openai.organization = secrets[organization]

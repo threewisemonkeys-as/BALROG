@@ -1,15 +1,85 @@
 [build-system]
-requires = ["setuptools>=58.0.0", "wheel"]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "balrog"
+version = "0.1.0"
+description = "Benchmark for Agentic LLM and VLM Reasoning On Games"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["reinforcement learning", "ai", "nlp", "llm"]
+authors = [
+    {name = "Davide Paglieri"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "openai",
+    "anthropic",
+    "google-generativeai",
+    "hydra-core",
+    "opencv-python-headless",
+    "wandb",
+    "pytest",
+    "scipy",
+    "crafter",
+    "gym==0.23",
+    "requests",
+    "minihack @ git+https://github.com/balrog-ai/minihack.git",
+    "textworld @ git+https://github.com/balrog-ai/TextWorld.git",
+    "tatsu==5.8.3",
+    "minigrid @ git+https://github.com/BartekCupial/Minigrid.git",
+    "baba @ git+https://github.com/nacloos/baba-is-ai.git",
+    "balrog-nle>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort>=5.12",
+    "pytest<8.0",
+    "flake8",
+    "pre-commit",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://github.com/DavidePaglieri/BALROG/"
+Website = "https://www.balrogai.com/"
+
+[project.scripts]
+balrog-post-install = "balrog.scripts.post_install:main"
+
+[tool.setuptools]
+packages = ["balrog"]
+
+[tool.setuptools.package-data]
+balrog = [
+    "config/config.yaml",
+    "environments/nle/achievements.json",
+    "environments/nle/Hack-Regular.ttf",
+    "environments/nle/tiles.pkl",
+    "environments/nle/Tiles16x16.png",
+]
 
 [tool.black]
 line-length = 120
-target-version = ['py38']  # Adjust this to your Python version(s)
-# You can include other black settings as needed
+target-version = ['py38']
 
 [tool.isort]
 profile = "black"
 line_length = 120
-# This ensures isort is compatible with black's formatting
 
 [tool.flake8]
 max-line-length = 120
@@ -29,3 +99,6 @@ exclude = [
     "build",
     "dist"
 ]
+
+[tool.uv.sources]
+minihack = { git = "https://github.com/balrog-ai/minihack.git" }

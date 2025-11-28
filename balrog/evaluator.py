@@ -307,25 +307,26 @@ class Evaluator:
             action = None
             for step in range(max_steps_per_episode):
                 response = agent.act(obs, prev_action=action)
-                action = env.check_action_validity(response.completion)
+                # action = env.check_action_validity(response.completion)
+                action = response.completion
+                logging.info(f'{action=}')
                 reasoning = response.reasoning if hasattr(response, "reasoning") else ""
 
                 episode_log["action_frequency"][action] += 1
                 episode_log["input_tokens"] += response.input_tokens
                 episode_log["output_tokens"] += response.output_tokens
 
-                obs, reward, terminated, truncated, info = env.step(action)
+                try:
+                    obs, reward, terminated, truncated, info = env.step(action)
+                except ValueError as e:
+                    logging.warning(f"Invalid action: {action} led to error-\n{e}")
+                    if self.config.eval.feedback_on_invalid_action:
+                        obs["text"]["long_term_context"] = f"\n\nYour previous output did not contain a valid action. Retry\n\nObservation:\n{obs['text']['long_term_context']}"
+
                 done = terminated or truncated
 
                 episode_return += reward
 
-                # Give feedback on the action (if not valid)
-                obs["text"]["long_term_context"] = (
-                    f"\n\nYour previous output did not contain a valid action. Defaulted to action: {action}\n\nObservation:\n"
-                    + obs["text"]["long_term_context"]
-                    if (action != response.completion) and (self.config.eval.feedback_on_invalid_action)
-                    else obs["text"]["long_term_context"]
-                )
                 action = response.completion
                 # Write the step data to the CSV file
                 csv_writer.writerow(
@@ -338,6 +339,7 @@ class Evaluator:
                         done,
                     ]
                 )
+                csv_file.flush()
 
                 pbar.update(1)
 

@@ -13,7 +13,7 @@ eval:
   num_workers: 16        # Number of parallel workers. Increase for faster evaluation if you have enough resources
   num_episodes:          # Minimum number of episodes to run for each environment. You can optionally increase this to get more reliable results
     nle: 5               # Number of episodes for the 'nle' environment
-    minihack: 5          # Number of episodes for each 'minihack' task
+    minihack: 10          # Number of episodes for each 'minihack' task
     babyai: 10           # Number of episodes for each 'babyai' task
     crafter: 10          # Number of episodes for the 'crafter' environment
     babaisai: 3          # Number of episodes for each 'babaisai' task
@@ -56,7 +56,7 @@ envs:
     penalty_mode: constant      
     savedir: null
     save_ttyrec_every: 0
-    autopickup: False           
+    # autopickup: False           
     skip_more: True
   babyai_kwargs:
     num_dists: 0                
@@ -87,14 +87,14 @@ tasks:
     - NetHackChallenge-v0       # Tasks for the NLE environment
 
   minihack_tasks:
-    - "MiniHack-Boxoban-Hard-v0"
-    - "MiniHack-Boxoban-Medium-v0"
-    - "MiniHack-MazeWalk-9x9-v0"
-    - "MiniHack-MazeWalk-15x15-v0"
-    - "MiniHack-Corridor-R3-v0"
-    - "MiniHack-CorridorBattle-Dark-v0"
+    # - "MiniHack-Boxoban-Hard-v0"
+    # - "MiniHack-Boxoban-Medium-v0"
+    # - "MiniHack-MazeWalk-9x9-v0"
+    # - "MiniHack-MazeWalk-15x15-v0"
+    # - "MiniHack-Corridor-R3-v0"
+    # - "MiniHack-CorridorBattle-Dark-v0"
     - "MiniHack-Quest-Easy-v0"
-    - "MiniHack-Quest-Medium-v0"
+    # - "MiniHack-Quest-Medium-v0"
 
   crafter_tasks:
     - "default"                 # Tasks for Crafter

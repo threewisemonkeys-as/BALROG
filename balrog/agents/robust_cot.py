@@ -38,7 +38,9 @@ class RobustCoTAgent(BaseAgent):
 
         # Updated instructions: chain of thought + strict output format
         cot_instructions = """
-First, think about the best course of action.
+First, think about the best course of action. Present this in the following format -
+<think> thinking about what action to take </think>
+
 Then, you must choose exactly one of the listed actions and output it strictly in the following format:
 
 <|ACTION|>YOUR_CHOSEN_ACTION<|END|>
@@ -50,7 +52,9 @@ Replace YOUR_CHOSEN_ACTION with the chosen action.
         messages[-1].content += "\n\n" + cot_instructions
 
         # Generate the CoT reasoning
+        print(f"{len(messages)=}")
         cot_reasoning = self.client.generate(messages)
+        print(cot_reasoning)
 
         # Extract the final answer from the CoT reasoning
         final_answer = self._extract_final_answer(cot_reasoning)

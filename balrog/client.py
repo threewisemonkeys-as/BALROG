@@ -147,7 +147,15 @@ class OpenAIWrapper(LLMClientWrapper):
         if not self._initialized:
             if self.client_name.lower() == "vllm":
                 self.client = OpenAI(api_key="EMPTY", base_url=self.base_url)
-            elif self.client_name.lower() == "nvidia" or self.client_name.lower() == "xai":
+            elif self.client_name.lower() == "openrouter":
+                self.client = OpenAI(
+                    api_key=os.environ["OPENROUTER_API_KEY"],
+                    base_url="https://openrouter.ai/api/v1",
+                )
+            elif (
+                self.client_name.lower() == "nvidia"
+                or self.client_name.lower() == "xai"
+            ):
                 if not self.base_url or not self.base_url.strip():
                     raise ValueError("base_url must be provided when using NVIDIA or XAI client")
                 self.client = OpenAI(base_url=self.base_url)
@@ -193,17 +201,26 @@ class OpenAIWrapper(LLMClientWrapper):
             api_kwargs = {
                 "messages": converted_messages,
                 "model": self.model_id,
-                "max_tokens": self.client_kwargs.get("max_tokens", 1024),
             }
-
+            if "gpt-5" in self.model_id:
+                api_kwargs["max_completion_tokens"] = self.client_kwargs.get(
+                    "max_tokens", 1024
+                )
+            else:
+                api_kwargs["max_tokens"] = self.client_kwargs.get("max_tokens", 1024)
             # Only include temperature if it's not None
             temperature = self.client_kwargs.get("temperature")
             if temperature is not None:
                 api_kwargs["temperature"] = temperature
 
+            logging.info(f"{len(api_kwargs['messages'])=}")
             return self.client.chat.completions.create(**api_kwargs)
 
+        # print(f"{'*' * 10} Message {'*' * 10}\n{messages[-1]}")
         response = self.execute_with_retries(api_call)
+        # print(
+        #     f"{'*' * 10} Response {'*' * 10}\n{response.choices[0].message.content.strip()}"
+        # )
 
         return LLMResponse(
             model_id=self.model_id,
@@ -504,7 +521,13 @@ def create_llm_client(client_config):
 
     def client_factory():
         client_name_lower = client_config.client_name.lower()
-        if "openai" in client_name_lower or "vllm" in client_name_lower or "nvidia" in client_name_lower or "xai" in client_name_lower:
+        if (
+            "openai" in client_name_lower
+            or "vllm" in client_name_lower
+            or "nvidia" in client_name_lower
+            or "xai" in client_name_lower
+            or "openrouter" in client_name_lower
+        ):
             # NVIDIA and XAI use OpenAI-compatible API, so we use the OpenAI wrapper
             return OpenAIWrapper(client_config)
         elif "gemini" in client_name_lower:

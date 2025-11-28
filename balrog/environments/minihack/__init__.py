@@ -47,7 +47,7 @@ def get_available_actions(env):
     return available_actions
 
 
-def get_instruction_prompt(env, task="MiniHack-ExploreMaze-Hard-Mapped-v0"):
+def get_task_goal(task: str):
     if "corridor" in task.lower():
         goal = "Your goal is to explore the level and reach the stairs down"
     elif "quest" in task.lower():
@@ -57,6 +57,10 @@ def get_instruction_prompt(env, task="MiniHack-ExploreMaze-Hard-Mapped-v0"):
     else:
         goal = "Your goal is to get as far as possible in the game."
 
+    return goal
+
+def get_instruction_prompt(env, task="MiniHack-ExploreMaze-Hard-Mapped-v0"):
+    goal = get_task_goal(task=task)
     available_actions = get_available_actions(env)
     action_strings = ",\n".join(f"{action}: {description}" for action, description in available_actions.items())
     instruction_prompt = f"""
@@ -69,6 +73,29 @@ In a moment I will present a history of actions and observations from the game.
 Tip: there is no point in outputting the same action over and over if nothing changes.
 
 {goal}
+
+PLAY!
+""".strip()
+
+    return instruction_prompt
+
+
+def get_loaded_instruction_prompt(env, load: str, task: str):
+    goal = get_task_goal(task=task)
+    available_actions = get_available_actions(env)
+    action_strings = ",\n".join(f"{action}: {description}" for action, description in available_actions.items())
+    instruction_prompt = f"""
+You are an agent playing MiniHack. The following are the possible actions you can take in the game, followed by a short description of each action:
+
+{action_strings}.
+
+In a moment I will present a history of actions and observations from the game.
+
+Tips - 
+
+{ load }
+
+Goal: {goal}
 
 PLAY!
 """.strip()

@@ -1,0 +1,4 @@
+- The # character denotes a corridor
+- You can zap to create a path over the lava.
+- Regions of the map that do not display walls around them are unexplored.
+- Since the goal is to find stairs down, if you dont see the stairs, keep moving to unexplored regions of the map to find them.

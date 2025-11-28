@@ -19,6 +19,8 @@ from balrog.dataset import InContextDataset
 from balrog.environments import make_env
 from balrog.utils import get_unique_seed
 
+from balrog.environments.minihack import get_loaded_instruction_prompt
+
 logger = logging.getLogger(__name__)
 
 
@@ -270,10 +272,18 @@ class Evaluator:
             "output_tokens": 0,
         }
 
-        instructions = None
-        if self.env_name == "babyai":
-            instructions = obs["mission"]
-        agent.prompt_builder.update_instruction_prompt(env.get_instruction_prompt(instructions=instructions))
+        if (instruction_text := self.config.get("instruction_prompt", None)) is not None:
+            instruction_prompt = get_loaded_instruction_prompt(
+                env=env,
+                load=instruction_text,
+                task=task
+            )
+            agent.prompt_builder.update_instruction_prompt(instruction_prompt)
+        else:
+            instructions = None
+            if self.env_name == "babyai":
+                instructions = obs["mission"]
+            agent.prompt_builder.update_instruction_prompt(env.get_instruction_prompt(instructions=instructions))
 
         episode_return = 0.0
 

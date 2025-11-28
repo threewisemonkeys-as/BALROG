@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
     "openai",
     "anthropic",
-    "google-generativeai",
     "hydra-core",
     "opencv-python-headless",
     "wandb",
@@ -42,6 +41,8 @@ dependencies = [
     "minigrid @ git+https://github.com/BartekCupial/Minigrid.git",
     "baba @ git+https://github.com/nacloos/baba-is-ai.git",
     "balrog-nle>=0.9.0",
+    "google-generativeai>=0.8.5",
+    "google-genai>=1.52.0",
 ]
 
 [project.optional-dependencies]

@@ -2,3 +2,4 @@
 - You can zap to create a path over the lava.
 - Regions of the map that do not display walls around them are unexplored.
 - Since the goal is to find stairs down, if you dont see the stairs, keep moving to unexplored regions of the map to find them.
+- Actions such as zap or quaff need follow up information to complete. For example after executing zap, you need to submit the key corresponding to the thing you want to zap as the action. This may be a character that is not necessarily in the list of valid actions.

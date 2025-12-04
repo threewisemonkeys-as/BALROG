@@ -43,6 +43,8 @@ dependencies = [
     "balrog-nle>=0.9.0",
     "google-generativeai>=0.8.5",
     "google-genai>=1.52.0",
+    "litellm>=1.80.7",
+    "fire>=0.7.1",
 ]
 
 [project.optional-dependencies]

@@ -52,9 +52,9 @@ Replace YOUR_CHOSEN_ACTION with the chosen action.
         messages[-1].content += "\n\n" + cot_instructions
 
         # Generate the CoT reasoning
-        print(f"{len(messages)=}")
+        # print(f"{len(messages)=}")
         cot_reasoning = self.client.generate(messages)
-        print(cot_reasoning)
+        # print(cot_reasoning)
 
         # Extract the final answer from the CoT reasoning
         final_answer = self._extract_final_answer(cot_reasoning)

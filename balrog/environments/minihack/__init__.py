@@ -49,11 +49,21 @@ def get_available_actions(env):
 
 def get_task_goal(task: str):
     if "corridor" in task.lower():
-        goal = "Your goal is to explore the level and reach the stairs down"
+        goal = "Your goal is to explore the level and reach the stairs down (>)"
     elif "quest" in task.lower():
-        goal = "Your goal is to explore the level, fight monsters, and navigate rooms and mazes to ultimately reach the stairs down."
+        goal = "Your goal is to explore the level, fight monsters, and navigate rooms and mazes to ultimately reach the stairs down (>)"
     elif "boxoban" in task.lower():
         goal = "You are playing Boxoban, a box-pushing game inspired by Sokoban. Your goal is to push the boulders onto the fountains on the map. You can push the boulders by walking into them, as long as there are no obstacles behind them."
+    elif "lavacross" in task.lower():
+        goal = "Your goal is to cross the lava and reach the stairs down on the other side"
+    elif "-eat-" in task.lower():
+        goal = "Your goal is to eat the food item in the level"
+    elif "-pray-" in task.lower():
+        goal = "Your goal is to pray to the gods"
+    elif "-wear-" in task.lower():
+        goal = "Your goal is to wear the armor item in the level"
+    elif "-lockeddoor-" in task.lower():
+        goal = "Your goal is to open the locked door and reach the stairs down (>)"
     else:
         goal = "Your goal is to get as far as possible in the game."
 

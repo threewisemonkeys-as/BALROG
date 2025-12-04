@@ -59,6 +59,7 @@ envs:
     save_ttyrec_every: 0
     # autopickup: False           
     skip_more: True
+    include_lang_obs: True
   babyai_kwargs:
     num_dists: 0                
   crafter_kwargs:
@@ -96,6 +97,14 @@ tasks:
     # - "MiniHack-CorridorBattle-Dark-v0"
     - "MiniHack-Quest-Easy-v0"
     # - "MiniHack-Quest-Medium-v0"
+    # - "MiniHack-Eat-v0"
+    # - "MiniHack-Eat-Distr-v0"
+    # - "MiniHack-Pray-v0"
+    # - "MiniHack-Pray-Distr-v0"
+    # - "MiniHack-LavaCross-Full-v0"
+    # - "MiniHack-Wear-v0"
+    # - "MiniHack-Wear-Distr-v0"
+    # - "MiniHack-LockedDoor-v0"
 
   crafter_tasks:
     - "default"                 # Tasks for Crafter
@@ -161,3 +170,4 @@ hydra:
 
 instruction_path: null
 instruction_prompt: null
+num_episodes: 5

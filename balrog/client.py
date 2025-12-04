@@ -14,6 +14,8 @@ from google.genai import types
 from anthropic import Anthropic
 from openai import OpenAI
 
+from balrog.pricing import calculate_cost
+
 LLMResponse = namedtuple(
     "LLMResponse",
     [
@@ -23,6 +25,7 @@ LLMResponse = namedtuple(
         "input_tokens",
         "output_tokens",
         "reasoning",
+        "cost",
     ],
 )
 
@@ -223,13 +226,18 @@ class OpenAIWrapper(LLMClientWrapper):
         #     f"{'*' * 10} Response {'*' * 10}\n{response.choices[0].message.content.strip()}"
         # )
 
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        cost = calculate_cost(self.model_id, input_tokens, output_tokens)
+
         return LLMResponse(
             model_id=self.model_id,
             completion=response.choices[0].message.content.strip(),
             stop_reason=response.choices[0].finish_reason,
-            input_tokens=response.usage.prompt_tokens,
-            output_tokens=response.usage.completion_tokens,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             reasoning=None,
+            cost=cost,
         )
 
 
@@ -365,16 +373,31 @@ class GoogleGenerativeAIWrapper(LLMClientWrapper):
             # Check if the successful response contains an empty completion
             if not completion or completion.strip() == "":
                 logger.warning(f"Gemini returned an empty completion for model {self.model_id}. Returning default empty response.")
+                input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0) if response and getattr(response, "usage_metadata", None) else 0
+                output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0) if response and getattr(response, "usage_metadata", None) else 0
+                cost = calculate_cost(self.model_id, input_tokens, output_tokens)
                 return LLMResponse(
                     model_id=self.model_id,
                     completion="",
                     stop_reason="empty_response",
-                    input_tokens=getattr(response.usage_metadata, "prompt_token_count", 0) if response and getattr(response, "usage_metadata", None) else 0,
-                    output_tokens=getattr(response.usage_metadata, "candidates_token_count", 0) if response and getattr(response, "usage_metadata", None) else 0,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
                     reasoning=None,
+                    cost=cost,
                 )
             else:
                 # If completion is not empty, return the normal response
+                input_tokens = (
+                    getattr(response.usage_metadata, "prompt_token_count", 0)
+                    if response and getattr(response, "usage_metadata", None)
+                    else 0
+                )
+                output_tokens = (
+                    getattr(response.usage_metadata, "candidates_token_count", 0)
+                    if response and getattr(response, "usage_metadata", None)
+                    else 0
+                )
+                cost = calculate_cost(self.model_id, input_tokens, output_tokens)
                 return LLMResponse(
                     model_id=self.model_id,
                     completion=completion,
@@ -383,17 +406,10 @@ class GoogleGenerativeAIWrapper(LLMClientWrapper):
                         if response and getattr(response, "candidates", [])
                         else "unknown"
                     ),
-                    input_tokens=(
-                        getattr(response.usage_metadata, "prompt_token_count", 0)
-                        if response and getattr(response, "usage_metadata", None)
-                        else 0
-                    ),
-                    output_tokens=(
-                        getattr(response.usage_metadata, "candidates_token_count", 0)
-                        if response and getattr(response, "usage_metadata", None)
-                        else 0
-                    ),
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
                     reasoning=None,
+                    cost=cost,
                 )
         except Exception as e:
             logger.error(f"API call failed after {self.max_retries} retries: {e}. Returning empty completion.")
@@ -405,6 +421,7 @@ class GoogleGenerativeAIWrapper(LLMClientWrapper):
                 input_tokens=0, # Assuming 0 tokens consumed if call failed
                 output_tokens=0,
                 reasoning=None,
+                cost=0.0,
             )
 
 
@@ -476,13 +493,18 @@ class ClaudeWrapper(LLMClientWrapper):
 
         response = self.execute_with_retries(api_call)
 
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        cost = calculate_cost(self.model_id, input_tokens, output_tokens)
+
         return LLMResponse(
             model_id=self.model_id,
             completion=response.content[0].text.strip(),
             stop_reason=response.stop_reason,
-            input_tokens=response.usage.input_tokens,
-            output_tokens=response.usage.output_tokens,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             reasoning=None,
+            cost=cost,
         )
 
 

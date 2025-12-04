@@ -7,24 +7,6 @@ agent:
   max_icl_history: 1000   # Maximum number of ICL steps to keep in history (if using 'few_shot' type of agent)
   cache_icl: False
 
-eval:
-  output_dir: "results"  # Directory where evaluation results will be saved
-  resume_from: null      # Path to to the incomplete results file to resume an incomplete run
-  num_workers: 16        # Number of parallel workers. Increase for faster evaluation if you have enough resources
-  num_episodes:          # Minimum number of episodes to run for each environment. You can optionally increase this to get more reliable results
-    nle: 5               # Number of episodes for the 'nle' environment
-    minihack: 10          # Number of episodes for each 'minihack' task
-    babyai: 10           # Number of episodes for each 'babyai' task
-    crafter: 10          # Number of episodes for the 'crafter' environment
-    babaisai: 3          # Number of episodes for each 'babaisai' task
-    textworld: 10        # Number of episodes for each 'textworld' task
-  max_steps_per_episode: null   # Max steps per episode; null uses the environment default
-  save_trajectories: True       # Whether to save agent trajectories (text only)
-  save_images: False            # Whether to save images from the environment
-  icl_episodes: 1
-  icl_dataset: records
-  feedback_on_invalid_action : True       # Whether to provide feedback on invalid actions
-
 client:
   client_name: openai           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
   model_id: gpt-4o              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
@@ -96,16 +78,16 @@ tasks:
     # - "MiniHack-MazeWalk-15x15-v0"
     # - "MiniHack-Corridor-R3-v0"
     # - "MiniHack-CorridorBattle-Dark-v0"
-    - "MiniHack-Quest-Easy-v0"
+    # - "MiniHack-Quest-Easy-v0"
     # - "MiniHack-Quest-Medium-v0"
-    # - "MiniHack-Eat-v0"
-    # - "MiniHack-Eat-Distr-v0"
-    # - "MiniHack-Pray-v0"
-    # - "MiniHack-Pray-Distr-v0"
-    # - "MiniHack-LavaCross-Full-v0"
-    # - "MiniHack-Wear-v0"
-    # - "MiniHack-Wear-Distr-v0"
-    # - "MiniHack-LockedDoor-v0"
+    - "MiniHack-Eat-v0"
+    - "MiniHack-Eat-Distr-v0"
+    - "MiniHack-Pray-v0"
+    - "MiniHack-Pray-Distr-v0"
+    - "MiniHack-LavaCross-Full-v0"
+    - "MiniHack-Wear-v0"
+    - "MiniHack-Wear-Distr-v0"
+    - "MiniHack-LockedDoor-v0"
 
   crafter_tasks:
     - "default"                 # Tasks for Crafter
@@ -169,6 +151,21 @@ hydra:
     dir: .                     # Set the working directory to the current directory
   output_subdir: null          # Do not use an output subdirectory
 
-instruction_path: null
-instruction_prompt: null
-num_episodes: 5
+eval:
+  output_dir: "logs/dev"
+  resume_from: null
+  num_workers: 16
+  num_episodes: 5
+  max_steps_per_episode: null
+  save_trajectories: True
+  save_images: False
+  icl_episodes: 1
+  icl_dataset: records
+  feedback_on_invalid_action : True
+  instruction_path: null
+  instruction_prompt: null
+  mode: "eval"
+
+  evolve:
+    num_steps: 20
+    rollouts_per_step: 1

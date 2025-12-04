@@ -5,12 +5,13 @@ import sys
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+import json
 from dataclasses import dataclass
 
 import hydra
 import litellm
 from hydra.utils import get_original_cwd
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from balrog.agents import AgentFactory
 from balrog.evaluator import EvaluatorManager
@@ -23,8 +24,10 @@ def summarise_results(results: dict):
     for env_name, env_results in results.items():
         num_attempts = len(env_results)
         summary[env_name] = {
+            "num_solved": sum([r['progression'] == 1.0 for r in env_results]),
             "avg_prog": sum([r['progression'] for r in env_results]) / num_attempts,
             "avg_steps": sum([r['num_steps'] for r in env_results]) / num_attempts,
+            "total_cost": sum([r['total_cost'] for r in env_results]),
             "avg_cost": sum([r['total_cost'] for r in env_results]) / num_attempts,
         }
     
@@ -37,7 +40,7 @@ def one_step(
     original_cwd: str,
     output_dir: str,
 ):
-    config.instruction_prompt = instruction
+    config.eval.instruction_prompt = instruction
     evaluator_manager = EvaluatorManager(config, original_cwd=original_cwd, output_dir=output_dir)
     agent_factory = AgentFactory(config)
     results = evaluator_manager.run(agent_factory)
@@ -67,6 +70,7 @@ def one_step_wrap(
     )
 
     print(summary)
+    json.dump(summary, open(Path(output_dir) / "summary.json", "w"), indent=4)
 
 
 async def get_episode_summary_async(
@@ -299,7 +303,7 @@ def online_evolve(
         logging.info("Starting fresh evolution (no existing steps found)")
         h = ""
 
-    config.num_episodes = evolve_config.rollouts_per_step
+    config.eval.num_episodes = evolve_config.rollouts_per_step
 
     logging.info(f"Starting online evolution with {evolve_config.num_steps} steps")
     logging.info(f"Rollouts per step: {evolve_config.rollouts_per_step}")
@@ -372,22 +376,28 @@ def main(config: DictConfig):
         force=True,
     )
 
-    # Create an EvaluatorManager and run evaluation
-    # with redirect_to_file(log_filename):
-        # one_step(config, original_cwd, output_dir)
+    # Save config to output directory
+    config_path = os.path.join(output_dir, "config.yaml")
+    with open(config_path, "w") as f:
+        OmegaConf.save(config=config, f=f)
+    logging.info(f"Saved config to {config_path}")
 
-    # one_step_wrap(config=config, original_cwd=original_cwd, output_dir=output_dir)
 
-    ec = EvolveConfig(
-        num_steps=20,
-        rollouts_per_step=1,
-    )
-    online_evolve(
-        evolve_config=ec,
-        config=config,
-        original_cwd=original_cwd,
-        output_dir=output_dir,
-    )
+    match config.eval.mode:
+        case "eval":
+           one_step_wrap(config=config, original_cwd=original_cwd, output_dir=output_dir)
+
+        case "evolve":
+            ec = EvolveConfig(
+                num_steps=config.evolve.num_steps,
+                rollouts_per_step=config.evolve.rollouts_per_step,
+            )
+            online_evolve(
+                evolve_config=ec,
+                config=config,
+                original_cwd=original_cwd,
+                output_dir=output_dir,
+            )
 
 
 

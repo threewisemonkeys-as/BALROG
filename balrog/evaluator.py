@@ -50,7 +50,7 @@ class EvaluatorManager:
             evaluator = Evaluator(env_name, config, original_cwd=original_cwd, output_dir=self.output_dir)
             self.env_evaluators[env_name] = evaluator
             for task in evaluator.tasks:
-                for episode_idx in range(config.num_episodes):
+                for episode_idx in range(config.eval.num_episodes):
                     # Check if task has been completed
                     json_filename = os.path.join(
                         self.output_dir,
@@ -315,6 +315,7 @@ class Evaluator:
             )
 
             action = None
+            step = 0
             for step in range(max_steps_per_episode):
                 response = agent.act(obs, prev_action=action)
                 # action = env.check_action_validity(response.completion)
@@ -333,6 +334,9 @@ class Evaluator:
                     logging.warning(f"Invalid action: {action} led to error-\n{e}")
                     if self.config.eval.feedback_on_invalid_action:
                         obs["text"]["long_term_context"] = f"\n\nYour previous output did not contain a valid action. Retry\n\nObservation:\n{obs['text']['long_term_context']}"
+                    terminated = False
+                    truncated = False
+                    reward = 0.0
 
                 done = terminated or truncated
 

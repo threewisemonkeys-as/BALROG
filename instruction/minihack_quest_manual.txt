@@ -1,0 +1,8 @@
+- The # character denotes a corridor
+- Zap a wand to clear through the lava.
+- First execute the zap action, then choose the wand and finally use it in the direction of the lava.
+- Selecting zap, wand and direction will be three seperate sequential actions.
+- After crossing the lava, keep exploring east until you find the stairs.
+- Zapping a wand on walls is dangerous and could kill you, only use it to cool lava.
+- If you do not see stairs (>) in the east, keep going east.
+- Once you see the stairs to go down (>), go towards them.

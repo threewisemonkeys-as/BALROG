@@ -50,7 +50,7 @@ class EvaluatorManager:
             evaluator = Evaluator(env_name, config, original_cwd=original_cwd, output_dir=self.output_dir)
             self.env_evaluators[env_name] = evaluator
             for task in evaluator.tasks:
-                for episode_idx in range(evaluator.num_episodes):
+                for episode_idx in range(config.num_episodes):
                     # Check if task has been completed
                     json_filename = os.path.join(
                         self.output_dir,
@@ -237,7 +237,6 @@ class Evaluator:
         self.output_dir = output_dir
         self.tasks = config.tasks[f"{self.env_name}_tasks"]
 
-        self.num_episodes = config.eval.num_episodes[self.env_name]
         self.num_workers = config.eval.num_workers
         self.max_steps_per_episode = config.eval.max_steps_per_episode
 
@@ -270,6 +269,7 @@ class Evaluator:
             "action_frequency": defaultdict(int),
             "input_tokens": 0,
             "output_tokens": 0,
+            "total_cost": 0.0,
         }
 
         if (instruction_text := self.config.get("instruction_prompt", None)) is not None:
@@ -325,6 +325,7 @@ class Evaluator:
                 episode_log["action_frequency"][action] += 1
                 episode_log["input_tokens"] += response.input_tokens
                 episode_log["output_tokens"] += response.output_tokens
+                episode_log["total_cost"] += response.cost
 
                 try:
                     obs, reward, terminated, truncated, info = env.step(action)
@@ -361,7 +362,7 @@ class Evaluator:
                     image.save(image_filename)
 
                 if done:
-                    logging.info(f"Episode done with reward: {episode_return}")
+                    logging.info(f"Episode done with reward: {episode_return}, total cost: ${episode_log['total_cost']:.4f}")
                     episode_log["done"] = True
                     if pbar.n < pbar.total:
                         pbar.update(pbar.total - pbar.n)
@@ -382,6 +383,14 @@ class Evaluator:
             episode_log["seed"] = seed
             episode_log["agent"] = OmegaConf.to_container(self.config.agent, resolve=True)
             episode_log["client"] = OmegaConf.to_container(self.config.client, resolve=True)
+
+            # Log cost summary
+            logging.info(
+                f"Episode {episode_idx} complete - "
+                f"Steps: {episode_log['num_steps']}, "
+                f"Tokens (in/out): {episode_log['input_tokens']}/{episode_log['output_tokens']}, "
+                f"Total cost: ${episode_log['total_cost']:.4f}"
+            )
 
             # Save the episode_log to a JSON file
             json_filename = os.path.join(

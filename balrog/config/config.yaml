@@ -49,6 +49,7 @@ envs:
     savedir: null               # Directory to save NLE data; null disables saving
     save_ttyrec_every: 0        # Frequency of saving TTY recordings
     skip_more: True            # Whether to skip the 'more' prompt in NLE
+    include_lang_obs: True     # Whether to include language observations in the observation
   minihack_kwargs: 
     character: "@"
     max_episode_steps: 100

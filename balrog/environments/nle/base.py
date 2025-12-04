@@ -14,7 +14,7 @@ from .render_rgb import rgb_render_image
 
 
 class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
-    def __init__(self, env, vlm=False):
+    def __init__(self, env, vlm=False, include_lang_obs=True):
         super().__init__(env, use_language_action=True)
         self.nle_language = nle_language_obsv.NLELanguageObsv()
         self.language_action_space = self.create_action_space()
@@ -29,6 +29,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
 
         self.progress = get_progress_system(self.env)
         self.max_steps = self.env.unwrapped._max_episode_steps
+        self.include_lang_obs = include_lang_obs
 
     def step(self, action):
         obs, reward, done, info = super().step(action)
@@ -159,11 +160,12 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         }
 
     def render_text(self, nle_obsv):
-        long_term_observations = [
-            ("text_message", "message"),
-            ("text_glyphs", "language observation"),
+        long_term_observations = [("text_message", "message")]
+        if self.include_lang_obs:
+            long_term_observations.append(("text_glyphs", "language observation"))
+        long_term_observations.extend([ 
             ("text_cursor", "cursor"),
-        ]
+        ])
 
         short_term_observations = [
             ("text_blstats", "statistics"),
@@ -187,12 +189,13 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         nle_obsv["map"] = ascii_map
         nle_obsv["text_cursor"] = nle_obsv["text_cursor"] + "\n" + cursor
 
-        long_term_observations = [
-            ("text_message", "message"),
-            ("text_glyphs", "language observation"),
+        long_term_observations = [("text_message", "message")]
+        if self.include_lang_obs:
+            long_term_observations.append(("text_glyphs", "language observation"))
+        long_term_observations.extend([
             ("text_cursor", "cursor"),
             ("map", "map"),
-        ]
+        ])
         short_term_observation = [
             ("text_inventory", "inventory"),
         ]

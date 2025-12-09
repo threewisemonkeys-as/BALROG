@@ -217,7 +217,6 @@ class OpenAIWrapper(LLMClientWrapper):
             if temperature is not None:
                 api_kwargs["temperature"] = temperature
 
-            logging.info(f"{len(api_kwargs['messages'])=}")
             return self.client.chat.completions.create(**api_kwargs)
 
         # print(f"{'*' * 10} Message {'*' * 10}\n{messages[-1]}")

@@ -272,7 +272,7 @@ class Evaluator:
             "total_cost": 0.0,
         }
 
-        if (instruction_text := self.config.get("instruction_prompt", None)) is not None:
+        if (instruction_text := self.config.eval.get("instruction_prompt", None)) is not None:
             instruction_prompt = get_loaded_instruction_prompt(
                 env=env,
                 load=instruction_text,

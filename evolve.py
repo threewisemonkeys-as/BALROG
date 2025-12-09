@@ -54,8 +54,8 @@ def one_step_wrap(
     original_cwd: str,
     output_dir: str,
 ):
-    if (instruction_path := config.get("instruction_path", None)) is None:
-        logging.info(f"Path to instructions not specified as instruction_path arg, considering empty instruction")
+    if (instruction_path := config.eval.get("instruction_path", None)) is None:
+        logging.info(f"Path to instructions not specified as eval.instruction_path arg, considering empty instruction")
         instruction = ""
     else:
         instruction = Path(instruction_path).read_text()
@@ -389,8 +389,8 @@ def main(config: DictConfig):
 
         case "evolve":
             ec = EvolveConfig(
-                num_steps=config.evolve.num_steps,
-                rollouts_per_step=config.evolve.rollouts_per_step,
+                num_steps=config.eval.evolve.num_steps,
+                rollouts_per_step=config.eval.evolve.rollouts_per_step,
             )
             online_evolve(
                 evolve_config=ec,

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import hydra
 from hydra.utils import get_original_cwd
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from balrog.agents import AgentFactory
 from balrog.evaluator import EvaluatorManager
@@ -50,6 +50,12 @@ def main(config: DictConfig):
         handlers=[logging.FileHandler(log_filename)],
         force=True,
     )
+
+    # Save config to output directory
+    config_path = os.path.join(output_dir, "config.yaml")
+    with open(config_path, "w") as f:
+        OmegaConf.save(config=config, f=f)
+    logging.info(f"Saved config to {config_path}")
 
     # Create an EvaluatorManager and run evaluation
     evaluator_manager = EvaluatorManager(config, original_cwd=original_cwd, output_dir=output_dir)

@@ -320,7 +320,6 @@ class Evaluator:
                 response = agent.act(obs, prev_action=action)
                 # action = env.check_action_validity(response.completion)
                 action = response.completion
-                logging.info(f'{action=}')
                 reasoning = response.reasoning if hasattr(response, "reasoning") else ""
 
                 episode_log["action_frequency"][action] += 1
@@ -343,13 +342,14 @@ class Evaluator:
                 episode_return += reward
 
                 action = response.completion
+                log_obs = f'{obs["text"]["short_term_context"]}\n\n{obs["text"]["long_term_context"]}'
                 # Write the step data to the CSV file
                 csv_writer.writerow(
                     [
                         step,
                         action,
                         reasoning,
-                        obs["text"]["long_term_context"],
+                        log_obs,
                         reward,
                         done,
                     ]
@@ -366,7 +366,6 @@ class Evaluator:
                     image.save(image_filename)
 
                 if done:
-                    logging.info(f"Episode done with reward: {episode_return}, total cost: ${episode_log['total_cost']:.4f}")
                     episode_log["done"] = True
                     if pbar.n < pbar.total:
                         pbar.update(pbar.total - pbar.n)
@@ -391,6 +390,7 @@ class Evaluator:
             # Log cost summary
             logging.info(
                 f"Episode {episode_idx} complete - "
+                f"Return: {episode_log['episode_return']:.2f}, "
                 f"Steps: {episode_log['num_steps']}, "
                 f"Tokens (in/out): {episode_log['input_tokens']}/{episode_log['output_tokens']}, "
                 f"Total cost: ${episode_log['total_cost']:.4f}"

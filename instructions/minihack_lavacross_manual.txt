@@ -1,0 +1,9 @@
+- Lava is denoted by the } character.
+- Walking into lava regularly will kill us.
+- To cross the lava we need to use a special item.
+- If you have a wand of cold, you can zap it to cool the lava.
+- If you have a ring of levitation, you can put it on to cross the lava without dying.
+- If you have a potion, you can quaff it to levitate across the lava.
+- A lot of actions (such as zap, puton, quaff) are multi step actions. First enter the action and in subsequent actions specify parameters such as what is being zapped or quaffed.
+- If you do not have any of these items, move around to find and pick them up.
+- Do not ue the search action. Move around to find items.

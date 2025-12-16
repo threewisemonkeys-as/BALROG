@@ -12,9 +12,17 @@ from .progress import get_progress_system
 from .render import tty_render_image
 from .render_rgb import rgb_render_image
 
+# Import perceptual features
+import sys
+from pathlib import Path
+# Add the BALROG root directory to the path to import perc
+balrog_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(balrog_root))
+from perc import compute_percepts, pretty
+
 
 class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
-    def __init__(self, env, vlm=False, include_lang_obs=True):
+    def __init__(self, env, vlm=False, include_lang_obs=True, include_perc_obs=False):
         super().__init__(env, use_language_action=True)
         self.nle_language = nle_language_obsv.NLELanguageObsv()
         self.language_action_space = self.create_action_space()
@@ -30,6 +38,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         self.progress = get_progress_system(self.env)
         self.max_steps = self.env.unwrapped._max_episode_steps
         self.include_lang_obs = include_lang_obs
+        self.include_perc_obs = include_perc_obs
 
     def step(self, action):
         obs, reward, done, info = super().step(action)
@@ -163,7 +172,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         long_term_observations = [("text_message", "message")]
         if self.include_lang_obs:
             long_term_observations.append(("text_glyphs", "language observation"))
-        long_term_observations.extend([ 
+        long_term_observations.extend([
             ("text_cursor", "cursor"),
         ])
 
@@ -171,6 +180,18 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
             ("text_blstats", "statistics"),
             ("text_inventory", "inventory"),
         ]
+
+        # Add perceptual observations if enabled
+        if self.include_perc_obs:
+            ascii_map = self.ascii_render(nle_obsv["tty_chars"])
+            try:
+                percepts = compute_percepts(ascii_map, doors_block=True)
+                perc_text = pretty(percepts)
+                nle_obsv["perceptual_features"] = perc_text
+                short_term_observations.append(("perceptual_features", "perceptual features"))
+            except Exception as e:
+                # If percept computation fails, continue without it
+                pass
 
         long_term_context = "\n".join([f"{name}:\n{nle_obsv[key]}\n" for key, name in long_term_observations])
         short_term_context = "\n".join([f"{name}:\n{nle_obsv[key]}\n" for key, name in short_term_observations])
@@ -184,9 +205,9 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         ascii_map = self.ascii_render(nle_obsv["tty_chars"])
         cursor = nle_obsv["tty_cursor"]
         cursor = f"(x={cursor[1]}, y={cursor[0]})"
-        ascii_map = "\n".join(ascii_map.split("\n")[1:])  # remove first line
+        ascii_map_display = "\n".join(ascii_map.split("\n")[1:])  # remove first line
 
-        nle_obsv["map"] = ascii_map
+        nle_obsv["map"] = ascii_map_display
         nle_obsv["text_cursor"] = nle_obsv["text_cursor"] + "\n" + cursor
 
         long_term_observations = [("text_message", "message")]
@@ -199,6 +220,17 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         short_term_observation = [
             ("text_inventory", "inventory"),
         ]
+
+        # Add perceptual observations if enabled
+        if self.include_perc_obs:
+            try:
+                percepts = compute_percepts(ascii_map, doors_block=True)
+                perc_text = pretty(percepts)
+                nle_obsv["perceptual_features"] = perc_text
+                short_term_observation.append(("perceptual_features", "perceptual features"))
+            except Exception as e:
+                # If percept computation fails, continue without it
+                pass
 
         long_term_context = "\n".join([f"{name}:\n{nle_obsv[key]}\n" for key, name in long_term_observations])
         short_term_context = "\n".join([f"{name}:\n{nle_obsv[key]}\n" for key, name in short_term_observation])

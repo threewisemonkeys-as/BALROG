@@ -19,6 +19,14 @@ from balrog.utils import collect_and_summarize_results, print_summary_table, set
 from llm_utils import build_llm_input, extract_llm_response_text, extract_xml_kv, validate_response_fields
 
 
+def trim_to_model_context_lim(text: str, model_name: str, buffer: int = 0, prefix: bool = True) -> str:
+    if "qwen" in model_name.lower():
+        return text[-100000:]
+    else:
+        return text[-350000:]
+
+
+
 def summarise_results(results: dict):
     summary = {}
     for env_name, env_results in results.items():
@@ -89,6 +97,7 @@ async def get_episode_summary_async(
         Summary text extracted from LLM response
     """
     traj_text = Path(trajectory_path).read_text()
+    traj_text = trim_to_model_context_lim(traj_text, config.client.model_id)
 
     prompt = f"""We are playing a game and trying to figure out how it works.
 Currently we have the following list of beliefs about the game -
@@ -114,9 +123,13 @@ Summary as requested
 
     # Call LLM asynchronously
     logging.info(f"Calling LLM to summarize trajectory: {trajectory_path}")
+    if config.client.client_name == "vllm":
+        model_name = f"hosted_vllm/{config.client.model_id}"
+    else:
+        model_name = f"{config.client.client_name}/{config.client.model_id}"
     response = await asyncio.to_thread(
         litellm.responses,
-        model=f"{config.client.client_name}/{config.client.model_id}",
+        model=model_name,
         input=input_data,
         num_retries=5,
     )
@@ -213,8 +226,12 @@ think about how we need to update our beliefs
 
     # Call LLM
     logging.info(f"Calling LLM to generate updated beliefs with prompt -\n{prompt}")
+    if config.client.client_name == "vllm":
+        model_name = f"hosted_vllm/{config.client.model_id}"
+    else:
+        model_name = f"{config.client.client_name}/{config.client.model_id}"
     response = litellm.responses(
-        model=f"{config.client.client_name}/{config.client.model_id}",
+        model=model_name,
         input=input_data,
         num_retries=5,
     )
@@ -327,6 +344,12 @@ def online_evolve(
         )
 
         logging.info(f"Step {step} summary: {step_summary}")
+
+        # Save step summary to JSON
+        summary_file = step_output_dir / "summary.json"
+        with open(summary_file, "w") as f:
+            json.dump(step_summary, f, indent=4)
+        logging.info(f"Saved step summary to {summary_file}")
 
         # Improve beliefs based on results
         h = improve(config, h, str(step_output_dir))

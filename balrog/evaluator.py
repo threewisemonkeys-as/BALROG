@@ -272,7 +272,7 @@ class Evaluator:
             "total_cost": 0.0,
         }
 
-        if (instruction_text := self.config.eval.get("instruction_prompt", None)) is not None:
+        if (instruction_text := self.config.eval.get("instruction_prompt", None)) is not None and self.config.eval.get("instrucions_in_system_prompt", False):
             instruction_prompt = get_loaded_instruction_prompt(
                 env=env,
                 load=instruction_text,
@@ -284,6 +284,42 @@ class Evaluator:
             if self.env_name == "babyai":
                 instructions = obs["mission"]
             agent.prompt_builder.update_instruction_prompt(env.get_instruction_prompt(instructions=instructions))
+
+        # Load perception module if provided
+        perception_fn = None
+        if (perception_code := self.config.eval.get("perception_prompt", None)) is not None:
+            # First validate syntax before executing
+            try:
+                compile(perception_code, "<perception_module>", "exec")
+            except SyntaxError as e:
+                logging.error(
+                    f"Failed to load perception module - Syntax error at line {e.lineno}: {e.msg}\n"
+                    f"Hint: If using f-strings with curly braces, escape them by doubling: '{{{{' for '{{', '}}}}' for '}}'"
+                )
+                perception_fn = None
+            else:
+                try:
+                    # Execute the perception code to get the perceive function
+                    perception_namespace = {}
+                    exec(perception_code, perception_namespace)
+                    if "perceive" in perception_namespace:
+                        perception_fn = perception_namespace["perceive"]
+                        logging.info("Loaded perception module successfully")
+
+                        # apply perception module if loaded
+                        long_term_text = obs["text"]["long_term_context"]
+                        try:
+                            perception_output = perception_fn(long_term_text)
+                        except Exception as e:
+                            perception_output = f"Perception code failed with error -\n{e}"
+                            logging.warning(f"Perception module failed at step {step}: {e}")
+                        obs["text"]["short_term_context"] = f"perceptual features:\n{perception_output}\n\n{obs['text']['short_term_context']}"
+
+                    else:
+                        logging.warning("Perception code provided but no 'perceive' function found")
+                except Exception as e:
+                    logging.error(f"Failed to load perception module: {e}")
+                    perception_fn = None
 
         episode_return = 0.0
 
@@ -340,6 +376,16 @@ class Evaluator:
                 done = terminated or truncated
 
                 episode_return += reward
+
+                # Apply perception module if available
+                if perception_fn is not None:
+                    long_term_text = obs["text"]["long_term_context"]
+                    try:
+                        perception_output = perception_fn(long_term_text)
+                    except Exception as e:
+                        perception_output = f"Perception code failed with error -\n{e}"
+                        logging.warning(f"Perception module failed at step {step}: {e}")
+                    obs["text"]["short_term_context"] = f"perceptual features:\n{perception_output}\n\n{obs['text']['short_term_context']}"
 
                 action = response.completion
                 log_obs = f'{obs["text"]["short_term_context"]}\n\n{obs["text"]["long_term_context"]}'

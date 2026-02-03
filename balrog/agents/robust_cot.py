@@ -37,7 +37,7 @@ class RobustCoTAgent(BaseAgent):
 
         messages = self.prompt_builder.get_prompt()
 
-        if self.instruction_text is not None:
+        if self.instruction_text is not None and self.instruction_text.strip() != "":
             messages[-1].content += "\n\n" + f"""
 Tips -
 {self.instruction_text}
@@ -47,8 +47,20 @@ Tips -
         messages[-1].content += "\n\n" + """
 First create (if not present) or update your plan from the previous steps and presented the updated plan in -
 <plan>
-updated plan
+<goal>
+high level subtask you are trying to achieve currently in order to accomplish the main task. update this as you complete subtasks or achieve goals.
+</goal>
+<history>
+updated history with what happened. keep this numbered and summarise the past as you go along to keep the list short.
+</history>
+<reasoning>
+thinking about what to do next.
+</reasoning>
+<steps>
+updated next steps to achieve subtask and eventually the main task.
+</steps>
 </plan>
+
 
 Finally you must choose exactly one of the listed actions and output it strictly in the following format -
 <|ACTION|>YOUR_CHOSEN_ACTION<|END|>

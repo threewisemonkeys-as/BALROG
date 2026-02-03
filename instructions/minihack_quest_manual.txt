@@ -6,3 +6,4 @@
 - Zapping a wand on walls is dangerous and could kill you, only use it to cool lava.
 - If you do not see stairs (>) in the east, keep going east.
 - Once you see the stairs to go down (>), go towards them.
+- You should be on the same cell as the stairs down (>) to go down them

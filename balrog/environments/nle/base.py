@@ -21,8 +21,58 @@ sys.path.insert(0, str(balrog_root))
 from perc import compute_percepts, pretty
 
 
+def decode_grid(screen_desc):
+    if hasattr(screen_desc, "cpu"):
+        screen_desc = screen_desc.detach().cpu().numpy()
+    H, W, L = screen_desc.shape  # L should be 80
+    out = [["" for _ in range(W)] for _ in range(H)]
+    for r in range(H):
+        for c in range(W):
+            out[r][c] = bytes(screen_desc[r, c]).split(b"\x00", 1)[0].decode("utf-8", errors="replace")
+    return out
+
+def trim_empty_rows_cols(text_grid, empty_tokens=("", " ", "unknown", "void"), min_keep_rows=1, min_keep_cols=1):
+    H = len(text_grid); W = len(text_grid[0]) if H else 0
+    def is_empty_cell(s):
+        if s is None: return True
+        s2 = s.strip().lower()
+        return (s2 == "") or (s2 in empty_tokens)
+    def is_empty_row(r): return all(is_empty_cell(text_grid[r][c]) for c in range(W))
+    def is_empty_col(c): return all(is_empty_cell(text_grid[r][c]) for r in range(H))
+    top = 0
+    while top < H and is_empty_row(top): top += 1
+    bottom = H - 1
+    while bottom >= 0 and is_empty_row(bottom): bottom -= 1
+    left = 0
+    while left < W and is_empty_col(left): left += 1
+    right = W - 1
+    while right >= 0 and is_empty_col(right): right -= 1
+    if top > bottom:
+        mid = H // 2; half = max(0, (min_keep_rows - 1) // 2)
+        top = max(0, mid - half); bottom = min(H - 1, top + min_keep_rows - 1)
+    if left > right:
+        mid = W // 2; half = max(0, (min_keep_cols - 1) // 2)
+        left = max(0, mid - half); right = min(W - 1, left + min_keep_cols - 1)
+    return top, bottom, left, right
+
+def render_grid_trimmed(text_grid, pad=18, max_cell_chars=18, sep="|", empty_tokens=("", " ", "unknown", "void")):
+    top, bottom, left, right = trim_empty_rows_cols(text_grid, empty_tokens=empty_tokens)
+    top += 1
+    bottom += 1
+    def fmt_cell(s):
+        s = "" if s is None else s
+        s = " ".join(s.split())
+        if len(s) > max_cell_chars: s = s[: max_cell_chars - 1] + "…"
+        return s.ljust(pad)
+    render_str = f"Showing rows [{top}..{bottom}] cols [{left}..{right}] (from {len(text_grid)}x{len(text_grid[0]) if text_grid else 0})\n\n"
+    for r in range(top, bottom + 1):
+        row = (f" {sep} ").join(fmt_cell(text_grid[r][c]) for c in range(left, right + 1))
+        render_str += f"{r:3d} | {row}\n"
+    return render_str
+
+
 class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
-    def __init__(self, env, vlm=False, include_lang_obs=True, include_perc_obs=False):
+    def __init__(self, env, vlm=False, include_lang_obs=True, include_perc_obs=False, use_textual_desc=False):
         super().__init__(env, use_language_action=True)
         self.nle_language = nle_language_obsv.NLELanguageObsv()
         self.language_action_space = self.create_action_space()
@@ -39,6 +89,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         self.max_steps = self.env.unwrapped._max_episode_steps
         self.include_lang_obs = include_lang_obs
         self.include_perc_obs = include_perc_obs
+        self.use_textual_desc = use_textual_desc
 
     def step(self, action):
         obs, reward, done, info = super().step(action)
@@ -166,6 +217,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
             "text_cursor": self.nle_language.text_cursor(glyphs, blstats, tty_cursor).decode("latin-1"),
             "tty_chars": nle_obsv["tty_chars"],
             "tty_cursor": nle_obsv["tty_cursor"],
+            "screen_descriptions": nle_obsv["screen_descriptions"],
         }
 
     def render_text(self, nle_obsv):
@@ -190,7 +242,6 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
                 nle_obsv["perceptual_features"] = perc_text
                 short_term_observations.append(("perceptual_features", "perceptual features"))
             except Exception as e:
-                # If percept computation fails, continue without it
                 pass
 
         long_term_context = "\n".join([f"{name}:\n{nle_obsv[key]}\n" for key, name in long_term_observations])
@@ -203,11 +254,16 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
 
     def render_hybrid(self, nle_obsv):
         ascii_map = self.ascii_render(nle_obsv["tty_chars"])
+        map_display = "\n".join(ascii_map.split("\n")[1:])  # remove first line
+        
+        if self.use_textual_desc:
+            grid_text = decode_grid(nle_obsv["screen_descriptions"])
+            map_display += '\n\nmap with descriptions:\n' + render_grid_trimmed(grid_text, pad=1)
+        
         cursor = nle_obsv["tty_cursor"]
         cursor = f"(x={cursor[1]}, y={cursor[0]})"
-        ascii_map_display = "\n".join(ascii_map.split("\n")[1:])  # remove first line
 
-        nle_obsv["map"] = ascii_map_display
+        nle_obsv["map"] = map_display
         nle_obsv["text_cursor"] = nle_obsv["text_cursor"] + "\n" + cursor
 
         long_term_observations = [("text_message", "message")]
@@ -224,12 +280,12 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         # Add perceptual observations if enabled
         if self.include_perc_obs:
             try:
-                percepts = compute_percepts(ascii_map, doors_block=True)
+                ascii_map_for_percept = '\n'.join(ascii_map.strip().splitlines()[1:-2])
+                percepts = compute_percepts(ascii_map_for_percept, doors_block=True)
                 perc_text = pretty(percepts)
                 nle_obsv["perceptual_features"] = perc_text
                 short_term_observation.append(("perceptual_features", "perceptual features"))
             except Exception as e:
-                # If percept computation fails, continue without it
                 pass
 
         long_term_context = "\n".join([f"{name}:\n{nle_obsv[key]}\n" for key, name in long_term_observations])

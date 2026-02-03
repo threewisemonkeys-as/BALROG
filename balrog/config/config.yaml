@@ -1,9 +1,9 @@
 agent: 
   type: robust_cot       # Type of agent to use (e.g., 'naive', 'cot', etc.)
   remember_cot: True     # Whether the agent should remember its reasoning across turns
-  max_text_history: 2   # Maximum number of text messages to keep in the history
+  max_text_history: 4   # Maximum number of text messages to keep in the history
   max_image_history: 0   # Maximum number of images to keep in the history
-  max_cot_history: 2    # Maximum number of chain-of-thought steps to keep in history (if using 'cot' type of agent)
+  max_cot_history: 4    # Maximum number of chain-of-thought steps to keep in history (if using 'cot' type of agent)
   max_icl_history: 1000   # Maximum number of ICL steps to keep in history (if using 'few_shot' type of agent)
   cache_icl: False
 
@@ -32,7 +32,8 @@ envs:
     save_ttyrec_every: 0        # Frequency of saving TTY recordings
     skip_more: True            # Whether to skip the 'more' prompt in NLE
     include_lang_obs: False     # Whether to include language observations in the observation
-    include_perc_obs: True     # Whether to include perceptual features from perc.py in the observation
+    include_perc_obs: False     # Whether to include perceptual features from perc.py in the observation
+    use_textual_desc: False
   minihack_kwargs:
     character: "@"
     max_episode_steps: 100
@@ -44,7 +45,8 @@ envs:
     # autopickup: False
     skip_more: True
     include_lang_obs: False
-    include_perc_obs: True     # Whether to include perceptual features from perc.py in the observation
+    include_perc_obs: False     # Whether to include perceptual features from perc.py in the observation
+    use_textual_desc: False
   babyai_kwargs:
     num_dists: 0                
   crafter_kwargs:
@@ -154,7 +156,7 @@ hydra:
   output_subdir: null          # Do not use an output subdirectory
 
 eval:
-  output_dir: "logs/dev/dec16"
+  output_dir: "logs/dev/feb3"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -165,9 +167,13 @@ eval:
   icl_dataset: records
   feedback_on_invalid_action : True
   instruction_path: null
+  perception_path: null
   instruction_prompt: null
+  perception_prompt: null
+  instrucions_in_system_prompt: False
   mode: "eval"
 
   evolve:
-    num_steps: 50
-    rollouts_per_step: 10
+    num_steps: 20
+    rollouts_per_step: 1
+    improve_mode: "both"

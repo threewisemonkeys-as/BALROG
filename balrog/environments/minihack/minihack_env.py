@@ -19,6 +19,7 @@ def make_minihack_env(env_name, task, config, render_mode: Optional[str] = None)
     vlm = True if config.agent.max_image_history > 0 else False
     include_lang_obs = minihack_kwargs.pop("include_lang_obs", True)
     include_perc_obs = minihack_kwargs.pop("include_perc_obs", False)
+    use_textual_desc = minihack_kwargs.pop("use_textual_desc", False)
     env = gym.make(
         task,
         observation_keys=[
@@ -29,12 +30,13 @@ def make_minihack_env(env_name, task, config, render_mode: Optional[str] = None)
             "inv_strs",
             "tty_cursor",
             "tty_colors",
+            "screen_descriptions",
         ],
         **minihack_kwargs,
     )
     if skip_more:
         env = AutoMore(env)
-    env = NLELanguageWrapper(env, vlm=vlm, include_lang_obs=include_lang_obs, include_perc_obs=include_perc_obs)
+    env = NLELanguageWrapper(env, vlm=vlm, include_lang_obs=include_lang_obs, include_perc_obs=include_perc_obs, use_textual_desc=use_textual_desc)
 
     # wrap NLE with timeout
     env = NLETimeLimit(env)

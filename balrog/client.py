@@ -57,6 +57,26 @@ class LLMClientWrapper:
         self.delay = client_config.delay
         self.alternate_roles = client_config.alternate_roles
 
+    def log_prompt(self, messages):
+        """Log the complete prompt being sent to the LLM.
+
+        Args:
+            messages (list): A list of message objects to log.
+        """
+        logger.info(f"{'='*80}")
+        logger.info(f"LLM API CALL - Model: {self.model_id}")
+        logger.info(f"Number of messages: {len(messages)}")
+        logger.info(f"{'='*80}")
+        for idx, msg in enumerate(messages):
+            role = msg.role if hasattr(msg, 'role') else msg.get('role', 'unknown')
+            content = msg.content if hasattr(msg, 'content') else msg.get('content', '')
+            has_attachment = (msg.attachment is not None) if hasattr(msg, 'attachment') else False
+            logger.info(f"--- Message {idx + 1}/{len(messages)} [{role}] {'(has image)' if has_attachment else ''} ---")
+            logger.info(f"{content}")
+        logger.info(f"{'='*80}")
+        logger.info("END OF PROMPT")
+        logger.info(f"{'='*80}")
+
     def generate(self, messages):
         """Generate a response from the LLM given a list of messages.
 
@@ -197,6 +217,7 @@ class OpenAIWrapper(LLMClientWrapper):
         Returns:
             LLMResponse: The response from the OpenAI API.
         """
+        self.log_prompt(messages)
         self._initialize_client()
         converted_messages = self.convert_messages(messages)
 
@@ -350,6 +371,7 @@ class GoogleGenerativeAIWrapper(LLMClientWrapper):
         Returns:
             LLMResponse: The response from the Generative AI API.
         """
+        self.log_prompt(messages)
         self._initialize_client()
 
         converted_messages = self.convert_messages(messages)
@@ -472,6 +494,7 @@ class ClaudeWrapper(LLMClientWrapper):
         Returns:
             LLMResponse: The response from the Claude API.
         """
+        self.log_prompt(messages)
         self._initialize_client()
         converted_messages = self.convert_messages(messages)
 

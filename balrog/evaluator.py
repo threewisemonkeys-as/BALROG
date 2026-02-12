@@ -272,7 +272,7 @@ class Evaluator:
             "total_cost": 0.0,
         }
 
-        if (instruction_text := self.config.eval.get("instruction_prompt", None)) is not None and self.config.eval.get("instrucions_in_system_prompt", False):
+        if (instruction_text := self.config.eval.get("instruction_prompt", None)) is not None and self.config.eval.get("beliefs_in_system_prompt", False):
             instruction_prompt = get_loaded_instruction_prompt(
                 env=env,
                 load=instruction_text,
@@ -287,7 +287,16 @@ class Evaluator:
 
         # Load perception module if provided
         perception_fn = None
-        if (perception_code := self.config.eval.get("perception_prompt", None)) is not None:
+        perception_code = self.config.eval.get("perception_prompt", None)
+        # Fall back to loading from file if perception_prompt is not set
+        # (file-based approach avoids OmegaConf parsing issues with '${' in code)
+        if perception_code is None and (perception_path := self.config.eval.get("perception_path", None)) is not None:
+            try:
+                perception_code = Path(perception_path).read_text()
+            except Exception as e:
+                logging.error(f"Failed to load perception module from {perception_path}: {e}")
+                perception_code = None
+        if perception_code is not None:
             # First validate syntax before executing
             try:
                 compile(perception_code, "<perception_module>", "exec")
@@ -313,7 +322,7 @@ class Evaluator:
                         except Exception as e:
                             perception_output = f"Perception code failed with error -\n{e}"
                             logging.warning(f"Perception module failed at step {step}: {e}")
-                        obs["text"]["short_term_context"] = f"perceptual features:\n{perception_output}\n\n{obs['text']['short_term_context']}"
+                        obs["text"]["short_term_context"] = f"\n{'='*10} Start of features from Perception Module {'='*10}\n{perception_output}\n\n{'='*10} End of features from Perception Module {'='*10}\n\n{obs['text']['short_term_context']}"
 
                     else:
                         logging.warning("Perception code provided but no 'perceive' function found")
@@ -385,10 +394,10 @@ class Evaluator:
                     except Exception as e:
                         perception_output = f"Perception code failed with error -\n{e}"
                         logging.warning(f"Perception module failed at step {step}: {e}")
-                    obs["text"]["short_term_context"] = f"perceptual features:\n{perception_output}\n\n{obs['text']['short_term_context']}"
+                    obs["text"]["short_term_context"] = f"\n{'='*10} Start of features from Perception Module {'='*10}\n{perception_output}\n\n{'='*10} End of features from Perception Module {'='*10}\n\n{'='*10} Start of Auxilliary Observation {'='*10}\n{obs['text']['short_term_context']}\n\n{'='*10} End of Auxilliary Observation {'='*10}"
 
                 action = response.completion
-                log_obs = f'{obs["text"]["short_term_context"]}\n\n{obs["text"]["long_term_context"]}'
+                log_obs = f'{obs["text"]["short_term_context"]}\n\n{"="*10} Start of Direct Game Observation {"="*10}\n{obs["text"]["long_term_context"]}\n\n{"="*10} End of Direct Game Observation {"="*10}'
                 # Write the step data to the CSV file
                 csv_writer.writerow(
                     [

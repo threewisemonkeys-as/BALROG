@@ -19,7 +19,7 @@ from balrog.evaluator import EvaluatorManager
 from balrog.utils import setup_environment
 from balrog.environments import make_env
 from balrog.environments.minihack import get_loaded_instruction_prompt
-from improve import get_episode_summary_async, trim_to_model_context_lim
+from improve import get_episode_summary_async, trim_to_model_context_lim, _get_response_cost
 from llm_utils import build_llm_input, extract_llm_response_text, extract_xml_kv, validate_response_fields
 
 
@@ -97,6 +97,36 @@ def step_logging(step_output_dir: Path):
         root_logger.handlers = original_handlers
 
 
+@contextmanager
+def improve_logging(step_output_dir: Path):
+    """Context manager to redirect all logging to an improve-specific log file.
+
+    During the context, all log messages go to step_output_dir/improve.log.
+    After exiting, logging returns to normal (eval.log).
+    This is used for logging LLM prompts and outputs during the improve phase.
+    """
+    improve_log_file = step_output_dir / "improve.log"
+
+    # Create a handler for the improve log
+    improve_handler = logging.FileHandler(improve_log_file)
+    improve_handler.setLevel(logging.INFO)
+    improve_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+
+    # Get the root logger and save its current handlers
+    root_logger = logging.getLogger()
+    original_handlers = root_logger.handlers.copy()
+
+    # Replace handlers with improve handler
+    root_logger.handlers = [improve_handler]
+
+    try:
+        yield improve_log_file
+    finally:
+        # Restore original handlers
+        improve_handler.close()
+        root_logger.handlers = original_handlers
+
+
 def summarise_results(results: dict):
     summary = {}
     for env_name, env_results in results.items():
@@ -122,7 +152,16 @@ def one_step(
 ):
     """Run one step with both instruction and perception module."""
     config.eval.instruction_prompt = instruction
-    config.eval.perception_prompt = perception
+
+    # Write perception to file to avoid OmegaConf parsing issues with special characters
+    # (OmegaConf interprets '${' as interpolation syntax, which can appear in perception code)
+    if perception:
+        perception_file = Path(output_dir) / "_perception_module.py"
+        perception_file.write_text(perception)
+        config.eval.perception_path = str(perception_file)
+    else:
+        config.eval.perception_path = None
+
     evaluator_manager = EvaluatorManager(config, original_cwd=original_cwd, output_dir=output_dir)
     agent_factory = AgentFactory(config)
     results = evaluator_manager.run(agent_factory)
@@ -132,9 +171,9 @@ def one_step(
 
 def run_single_rollout_task(
     run_name: str,
-    base_instruction: str,
+    base_beliefs: str,
     perception: str,
-    hypothesis: str | None,
+    experiment: str | None,
     config: DictConfig,
     original_cwd: str,
     output_dir: str,
@@ -142,10 +181,10 @@ def run_single_rollout_task(
     """Helper function to run a single rollout task in a separate process.
     
     Args:
-        run_name: Name of the run (e.g., baseline_0, hypothesis_1)
-        base_instruction: Base beliefs
+        run_name: Name of the run (e.g., baseline_0, experiment_1)
+        base_beliefs: Base beliefs
         perception: Current perception module
-        hypothesis: Specific hypothesis to test (or None for baseline)
+        experiment: Specific experiment to test (or None for baseline)
         config: Configuration object
         original_cwd: Original working directory
         output_dir: Root output directory
@@ -159,30 +198,30 @@ def run_single_rollout_task(
     run_dir = Path(output_dir) / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
     
-    instruction_to_use = base_instruction
+    instruction_to_use = base_beliefs
     result_type = "baseline"
     
-    if hypothesis:
-        result_type = "hypothesis"
-        # Save the hypothesis being tested
-        (run_dir / "hypothesis.txt").write_text(hypothesis)
+    if experiment:
+        result_type = "experiment"
+        # Save the experiment being tested
+        (run_dir / "experiment.txt").write_text(experiment)
 
-        # Combine base instruction with hypothesis
-        if base_instruction:
-            instruction_to_use = f"""{base_instruction}
+        # Combine base instruction with experiment
+        if base_beliefs:
+            instruction_to_use = f"""{base_beliefs}
 
-=== HYPOTHESIS TO TEST ===
-The following hypothesis might help achieve the goal. Try to test it during gameplay:
+=== EXPERIMENT TO TEST ===
+The following experiment might help achieve the goal. Try to test it during gameplay:
 
-{hypothesis}
-=== END HYPOTHESIS ===
+{experiment}
+=== END EXPERIMENT ===
 """
         else:
-            instruction_to_use = f"""=== HYPOTHESIS TO TEST ===
-The following hypothesis might help achieve the goal. Try to test it during gameplay:
+            instruction_to_use = f"""=== EXPERIMENT TO TEST ===
+The following experiment might help achieve the goal. Try to test it during gameplay:
 
-{hypothesis}
-=== END HYPOTHESIS ===
+{experiment}
+=== END EXPERIMENT ===
 """
             
     logging.info(f"Starting rollout for {run_name} in process {os.getpid()}")
@@ -200,8 +239,8 @@ The following hypothesis might help achieve the goal. Try to test it during game
             "type": result_type,
             "summary": summary,
         }
-        if hypothesis:
-            result_data["hypothesis"] = hypothesis
+        if experiment:
+            result_data["experiment"] = experiment
             
         return run_name, result_data
         
@@ -211,9 +250,9 @@ The following hypothesis might help achieve the goal. Try to test it during game
 
 
 def run_explore_rollouts(
-    base_instruction: str,
+    base_beliefs: str,
     perception: str,
-    hypotheses: list[str],
+    experiments: list[str],
     config: DictConfig,
     original_cwd: str,
     output_dir: str,
@@ -221,17 +260,17 @@ def run_explore_rollouts(
 ) -> dict[str, dict]:
     """Run rollouts for exploration in parallel using ProcessPoolExecutor.
 
-    If hypotheses are provided, runs one rollout per hypothesis.
-    If no hypotheses are provided (empty list), runs `num_baseline_rollouts` baseline rollouts.
+    If experiments are provided, runs one rollout per experiment.
+    If no experiments are provided (empty list), runs `num_baseline_rollouts` baseline rollouts.
 
     Args:
-        base_instruction: Base beliefs/instructions
+        base_beliefs: Base beliefs/instructions
         perception: Current perception module
-        hypotheses: List of hypothesis strings to test (can be empty)
+        experiments: List of experiment strings to test (can be empty)
         config: BALROG configuration
         original_cwd: Original working directory
         output_dir: Output directory for results
-        num_baseline_rollouts: Number of rollouts to run if no hypotheses are provided
+        num_baseline_rollouts: Number of rollouts to run if no experiments are provided
 
     Returns:
         Dictionary mapping run index/name to their results summary
@@ -240,19 +279,19 @@ def run_explore_rollouts(
     
     # Determine tasks to run
     tasks = []
-    if not hypotheses:
-        logging.info(f"No hypotheses provided. Preparing {num_baseline_rollouts} baseline rollouts.")
+    if not experiments:
+        logging.info(f"No experiments provided. Preparing {num_baseline_rollouts} baseline rollouts.")
         for i in range(num_baseline_rollouts):
             tasks.append({
                 "run_name": f"baseline_{i}",
-                "hypothesis": None
+                "experiment": None
             })
     else:
-        logging.info(f"Preparing {len(hypotheses)} hypothesis rollouts.")
-        for i, hypothesis in enumerate(hypotheses):
+        logging.info(f"Preparing {len(experiments)} experiment rollouts.")
+        for i, experiment in enumerate(experiments):
             tasks.append({
-                "run_name": f"hypothesis_{i}",
-                "hypothesis": hypothesis
+                "run_name": f"experiment_{i}",
+                "experiment": experiment
             })
 
     # Use configured number of workers for parallelism
@@ -265,9 +304,9 @@ def run_explore_rollouts(
             future = executor.submit(
                 run_single_rollout_task,
                 run_name=task["run_name"],
-                base_instruction=base_instruction,
+                base_beliefs=base_beliefs,
                 perception=perception,
-                hypothesis=task["hypothesis"],
+                experiment=task["experiment"],
                 config=config,
                 original_cwd=original_cwd,
                 output_dir=output_dir
@@ -287,56 +326,58 @@ def run_explore_rollouts(
 
 def improve_step(
     config: DictConfig,
-    base_instruction: str,
+    base_beliefs: str,
     perception: str,
     output_dir: str,
-    previous_hypotheses: list[str],
+    previous_experiments: list[str],
     default_knowledge: str,
-    num_hypotheses: int = 10,
-) -> tuple[str, str, list[str]]:
-    """Improve step: Evaluate, Update Beliefs/Perception, Generate New Hypotheses.
+    num_experiments: int = 1,
+    rollout_results: dict[str, dict] | None = None,
+) -> tuple[str, str, list[str], float]:
+    """Improve step: Evaluate, Update Beliefs/Perception, Generate New Experiments.
 
     Args:
         config: Configuration containing model information
-        base_instruction: Current beliefs/instructions
+        base_beliefs: Current beliefs/instructions
         perception: Current perception module
         output_dir: Directory containing rollout results
-        previous_hypotheses: List of hypotheses tested in the last step
+        previous_experiments: List of experiments tested in the last step
         default_knowledge: Default knowledge string to include in prompt
-        num_hypotheses: Number of new hypotheses to generate
+        num_experiments: Number of new experiments to generate
+        rollout_results: Results from run_explore_rollouts, including any errors
 
     Returns:
-        Tuple of (updated_beliefs, updated_perception, new_hypotheses)
+        Tuple of (updated_beliefs, updated_perception, new_hypotheses, total_improve_cost)
     """
 
     async def get_all_summaries():
         """Get all episode summaries in parallel."""
-        # First, identify all episode paths and map them to their hypothesis (if any)
+        # First, identify all episode paths and map them to their experiment (if any)
         episode_tasks = []
-        
+
         for episode_path in Path(output_dir).rglob("*.csv"):
             try:
                 # Get path relative to output_dir to determine run name
                 rel_path = episode_path.relative_to(output_dir)
-                run_name = rel_path.parts[0] # e.g., baseline_0, hypothesis_1
-                
-                hypothesis_text = None
-                if run_name.startswith("hypothesis_"):
+                run_name = rel_path.parts[0] # e.g., baseline_0, experiment_1
+
+                experiment_text = None
+                if run_name.startswith("experiment_"):
                     try:
                         idx = int(run_name.split("_")[1])
-                        if 0 <= idx < len(previous_hypotheses):
-                            hypothesis_text = previous_hypotheses[idx]
+                        if 0 <= idx < len(previous_experiments):
+                            experiment_text = previous_experiments[idx]
                     except (ValueError, IndexError):
-                        logging.warning(f"Could not map run {run_name} to a hypothesis")
+                        logging.warning(f"Could not map run {run_name} to an experiment")
                 
                 # Create task for summary generation
                 episode_tasks.append(
                     get_episode_summary_async(
                         config, 
-                        base_instruction, 
+                        base_beliefs, 
                         perception, 
                         str(episode_path), 
-                        hypothesis=hypothesis_text
+                        experiment=experiment_text
                     )
                 )
             except ValueError:
@@ -347,16 +388,24 @@ def improve_step(
         return await asyncio.gather(*episode_tasks)
 
     # Get summaries for all episodes in parallel
-    ep_summaries = asyncio.run(get_all_summaries())
+    ep_results = asyncio.run(get_all_summaries())
 
-    # Combine all summaries
+    # Combine all summaries and track costs
     evidence_section = ""
-    for i, summary in enumerate(ep_summaries):
+    summary_cost = 0.0
+    for i, (summary, cost) in enumerate(ep_results):
         evidence_section += f"Episode {i+1} Summary:\n{summary.strip()}\n\n"
+        summary_cost += cost
+
+    # Include any rollout errors in evidence section
+    if rollout_results:
+        for run_name, result in rollout_results.items():
+            if "error" in result:
+                evidence_section += f"Rollout {run_name} ERROR: {result['error']}\n\n"
 
     base_prompt = f"""We are playing a game and trying to figure out how it works.
 Current beliefs about the game:
-{base_instruction if base_instruction else "(empty - no beliefs yet)"}
+{base_beliefs if base_beliefs else "(empty - no beliefs yet)"}
 
 The agent also receives the following default instructions/knowledge by default:
 === DEFAULT KNOWLEDGE ===
@@ -370,24 +419,32 @@ We have collected new experience.
 {evidence_section}
 
 Your task is to:
-1. Analyze the results. If hypotheses were tested, determine if they were CONFIRMED or REFUTED.
+1. Analyze the results. If experiments were tested, determine if they were confirmed or refuted.
 2. Update our beliefs about the game based on confirmed knowledge.
-3. Update/Improve the perception module to extract better features from the observation.
-4. Generate {num_hypotheses} NEW hypotheses to test in the next step.
-   - Hypotheses should be specific, actionable strategies or mechanics to test.
+3. Update the perception module to make sure it is correct and that it extracts better features from the direct game observation.
+4. Generate {num_experiments} NEW experiments to test in the next step.
+   - Experiments should be specific, actionable strategies or mechanics to test.
    - They should help us achieve the main goal.
 
-For beliefs, make sure to include all eseential information about the world, but to keep it brief and short (less than 20 points)
+It is important that you keep both the beliefs and the output of the perception module as simple as possible.
+
+For beliefs:
+- They should describe essential information about how the game works.
+- They should be very brief with a limit of 10 points, each of which should be only a few sentences. It is important to keep the beliefs simple.
+- Correct any wrong or misleading beliefs
+- From evidence present from the trajectories, infer beliefs that might lead to a positive outcome.
 
 For the perception module:
 - It should be a Python function `perceive(observation_text: str) -> str`.
-- Input `observation_text` contains labeled sections.
-- Output should be a textual description of useful features.
-- IMPORTANT: The code must be valid Python. In f-strings, escape curly braces by doubling them: use '{{{{' for literal '{{' and '}}}}' for literal '}}'. For example, to include the character '}}' in an f-string, write f"lava ('}}}}')" not f"lava ('}}')".
+- Input `observation_text` contains everything from the direct game observation as a string.
+- Ensure that the perception module is working correctly in that it is correctly extracting the intended information from the direct game state and presenting it in the features from perception module section.
+- Output should be a textual description of the game state that is useful for progressing in the game.
+- The output should be brief and to the point.
+- The code must be valid Python.
 
 Format your response in XML style as:
 <think>
-Analyze results, evaluate hypotheses, determine belief updates, design perception improvements, and brainstorm new hypotheses.
+Analyze results, evaluate experiments, determine belief updates, design perception improvements, and brainstorm new experiments.
 </think>
 <updated_beliefs>
 - [belief 1]
@@ -419,9 +476,10 @@ HYPOTHESIS 2: [Second hypothesis to test]
     # Retry loop for perception validation
     max_retries = 3
     perception_error = None
-    updated_beliefs = base_instruction
+    updated_beliefs = base_beliefs
     updated_perception = perception
     new_hypotheses = []
+    improve_call_cost = 0.0
 
     for attempt in range(max_retries):
         # Build prompt with error feedback if this is a retry
@@ -450,9 +508,11 @@ Please fix the error in your perception code.
             input=input_data,
             num_retries=5,
         )
+        improve_call_cost += _get_response_cost(response, config.client.model_id)
 
         # Extract response text
         response_text = extract_llm_response_text(response)
+        logging.info(f"Improve step LLM response (attempt {attempt + 1}/{max_retries}):\n{response_text}")
 
         # Extract fields
         response_dict = extract_xml_kv(response_text, ["updated_beliefs", "perception", "new_hypotheses"])
@@ -520,7 +580,8 @@ Please fix the error in your perception code.
     logging.info(f"Updated perception:\n{updated_perception}")
     logging.info(f"Generated {len(new_hypotheses)} new hypotheses")
 
-    return updated_beliefs, updated_perception, new_hypotheses
+    total_improve_cost = summary_cost + improve_call_cost
+    return updated_beliefs, updated_perception, new_hypotheses, total_improve_cost
 
 
 @dataclass
@@ -636,9 +697,9 @@ def online_explore(
     else:
         evolve_logger.info("Starting fresh exploration (no existing steps found)")
         # Load initial beliefs from file if specified
-        if (instruction_path := config.eval.get("instruction_path", None)) is not None:
-            h = Path(instruction_path).read_text()
-            evolve_logger.info(f"Loaded initial beliefs from: {instruction_path}")
+        if (beliefs_path := config.eval.get("beliefs_path", None)) is not None:
+            h = Path(beliefs_path).read_text()
+            evolve_logger.info(f"Loaded initial beliefs from: {beliefs_path}")
         else:
             h = ""
 
@@ -661,34 +722,41 @@ def online_explore(
     evolve_logger.info(f"Hypotheses per step: {explore_config.num_hypotheses}")
     evolve_logger.info(f"Baseline rollouts: {explore_config.num_baseline_rollouts}")
 
+    cumulative_cost = 0.0
+
     for step in range(start_step, explore_config.num_steps + 1):
         evolve_logger.info(f"\n{'='*80}")
         evolve_logger.info(f"EXPLORATION STEP {step}/{explore_config.num_steps}")
         evolve_logger.info(f"Hypotheses to test: {len(hypotheses)}")
+        if hypotheses:
+            for i, hyp in enumerate(hypotheses):
+                evolve_logger.info(f"  Hypothesis {i+1}: {hyp}")
+        else:
+            evolve_logger.info(f"  (no hypotheses - running baseline rollouts)")
         evolve_logger.info(f"{'='*80}")
 
         step_output_dir = Path(output_dir) / f"step_{step}"
         step_output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Run exploration with step-specific logging
+        # Save current state inputs (outside logging context)
+        (step_output_dir / "input_beliefs.txt").write_text(h)
+        (step_output_dir / "input_perception.txt").write_text(p)
+        with open(step_output_dir / "input_hypotheses.json", "w") as f:
+            json.dump(hypotheses, f, indent=4)
+
+        rollout_dir = step_output_dir / "rollouts"
+        rollout_dir.mkdir(parents=True, exist_ok=True)
+
+        # Phase 1: Explore (Rollouts) - with step-specific logging for agent steps
         with step_logging(step_output_dir) as step_log_file:
-            logging.info(f"Step {step} detailed logs")
+            logging.info(f"Step {step} agent rollout logs")
             logging.info(f"Current beliefs:\n{h if h else '(empty)'}")
             logging.info(f"Current perception:\n{p if p else '(empty)'}")
-            
-            # Save current state inputs
-            (step_output_dir / "input_beliefs.txt").write_text(h)
-            (step_output_dir / "input_perception.txt").write_text(p)
-            with open(step_output_dir / "input_hypotheses.json", "w") as f:
-                json.dump(hypotheses, f, indent=4)
 
-            # Phase 1: Explore (Rollouts)
             logging.info("=== Phase 1: Explore (Rollouts) ===")
-            rollout_dir = step_output_dir / "rollouts"
-            rollout_dir.mkdir(parents=True, exist_ok=True)
 
             rollout_results = run_explore_rollouts(
-                base_instruction=h,
+                base_beliefs=h,
                 perception=p,
                 hypotheses=hypotheses,
                 config=config,
@@ -696,39 +764,81 @@ def online_explore(
                 output_dir=str(rollout_dir),
                 num_baseline_rollouts=explore_config.num_baseline_rollouts,
             )
-            
-            # Save detailed rollout stats
-            with open(step_output_dir / "rollout_stats.json", "w") as f:
-                json.dump(rollout_results, f, indent=4, default=str)
 
-            # Phase 2: Improve (Analyze -> Update -> Generate Hypotheses)
+        # Save detailed rollout stats (outside logging context)
+        with open(step_output_dir / "rollout_stats.json", "w") as f:
+            json.dump(rollout_results, f, indent=4, default=str)
+
+        # Calculate rollout success statistics and log to eval.log
+        total_rollouts = len(rollout_results)
+        successful_rollouts = 0
+        partial_rollouts = 0
+        failed_rollouts = 0
+        error_rollouts = 0
+
+        for run_name, result in rollout_results.items():
+            if "error" in result:
+                error_rollouts += 1
+                continue
+            # Check summary for each environment
+            summary = result.get("summary", {})
+            for env_name, env_stats in summary.items():
+                if env_stats.get("num_perfect", 0) > 0:
+                    successful_rollouts += 1
+                elif env_stats.get("avg_prog", 0) > 0:
+                    partial_rollouts += 1
+                else:
+                    failed_rollouts += 1
+
+        evolve_logger.info(f"Rollout results: {total_rollouts} total, {successful_rollouts} successful (100%), "
+                          f"{partial_rollouts} partial progress, {failed_rollouts} failed (0%), {error_rollouts} errors")
+
+        # Phase 2: Improve (Analyze -> Update -> Generate Hypotheses) - with improve-specific logging
+        with improve_logging(step_output_dir) as improve_log_file:
+            logging.info(f"Step {step} improve phase logs")
             logging.info("=== Phase 2: Improve (Update & Generate) ===")
-            
-            new_h, new_p, new_hypotheses = improve_step(
+            logging.info(f"Current beliefs:\n{h if h else '(empty)'}")
+            logging.info(f"Current perception:\n{p if p else '(empty)'}")
+
+            new_h, new_p, new_hypotheses, improve_cost = improve_step(
                 config=config,
-                base_instruction=h,
+                base_beliefs=h,
                 perception=p,
                 output_dir=str(rollout_dir),
                 previous_hypotheses=hypotheses,
                 default_knowledge=default_knowledge,
                 num_hypotheses=explore_config.num_hypotheses,
+                rollout_results=rollout_results,
             )
 
-            # Update state for next step
-            h = new_h
-            p = new_p
-            hypotheses = new_hypotheses
+        # Update state for next step
+        h = new_h
+        p = new_p
+        hypotheses = new_hypotheses
 
-            # Save updated state
-            (step_output_dir / "beliefs.txt").write_text(h)
-            (step_output_dir / "perception.py").write_text(p)
-            with open(step_output_dir / "hypotheses.json", "w") as f:
-                json.dump(hypotheses, f, indent=4)
-            
-            # Log summary
-            evolve_logger.info(f"Step {step} completed.")
-            evolve_logger.info(f"Updated beliefs:\n{h}")
-            evolve_logger.info(f"Generated {len(hypotheses)} new hypotheses for next step.")
+        # Save updated state (outside logging context)
+        (step_output_dir / "beliefs.txt").write_text(h)
+        (step_output_dir / "perception.py").write_text(p)
+        with open(step_output_dir / "hypotheses.json", "w") as f:
+            json.dump(hypotheses, f, indent=4)
+
+        # Calculate and log costs
+        rollout_cost = 0.0
+        for _, result in rollout_results.items():
+            if "summary" in result:
+                for env_stats in result["summary"].values():
+                    rollout_cost += env_stats.get("total_cost", 0)
+        total_step_cost = rollout_cost + improve_cost
+        cumulative_cost += total_step_cost
+        evolve_logger.info(f"Step {step} costs: rollout=${rollout_cost:.6f}, improve=${improve_cost:.6f}, total=${total_step_cost:.6f}")
+        evolve_logger.info(f"Cumulative cost after step {step}: ${cumulative_cost:.6f}")
+
+        # Log summary to eval.log
+        evolve_logger.info(f"Step {step} completed.")
+        evolve_logger.info(f"Updated beliefs:\n{h}")
+        evolve_logger.info(f"Generated {len(hypotheses)} new hypotheses for next step:")
+        for i, hyp in enumerate(hypotheses):
+            evolve_logger.info(f"  Hypothesis {i+1}: {hyp}")
 
 
 @contextmanager
@@ -790,13 +900,13 @@ def main(config: DictConfig):
     evolve_logger.info(f"Saved config to {config_path}")
 
     # Get exploration config with defaults
-    num_hypotheses = config.eval.evolve.get("num_hypotheses", 10)
+    num_hypotheses = config.eval.evolve.get("num_hypotheses", 1)
     num_baseline_rollouts = config.eval.evolve.get("num_baseline_rollouts", 3)
 
     match config.eval.mode:
         case "eval":
             # Simple eval mode - just run one step
-            from perc_evolve import one_step_wrap
+            from rollout import one_step_wrap
             one_step_wrap(config=config, original_cwd=original_cwd, output_dir=output_dir)
 
         case "explore":

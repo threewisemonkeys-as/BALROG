@@ -62,11 +62,11 @@ def one_step_wrap(
     original_cwd: str,
     output_dir: str,
 ):
-    if (instruction_path := config.eval.get("instruction_path", None)) is None:
-        logging.info(f"Path to instructions not specified as eval.instruction_path arg, considering empty instruction")
+    if (beliefs_path := config.eval.get("beliefs_path", None)) is None:
+        logging.info(f"Path to instructions not specified as eval.beliefs_path arg, considering empty instruction")
         instruction = ""
     else:
-        instruction = Path(instruction_path).read_text()
+        instruction = Path(beliefs_path).read_text()
 
     logging.info(f"Using following as instruction -\n{instruction}")
 

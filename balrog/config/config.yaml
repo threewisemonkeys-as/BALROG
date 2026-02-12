@@ -8,8 +8,8 @@ agent:
   cache_icl: False
 
 client:
-  client_name: openai           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
-  model_id: gpt-4o              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
+  client_name: openrouter           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
+  model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
   base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
   generate_kwargs:
     temperature: 1.0            # Sampling temperature. If null the API default temperature is used instead
@@ -156,7 +156,7 @@ hydra:
   output_subdir: null          # Do not use an output subdirectory
 
 eval:
-  output_dir: "logs/dev/feb3"
+  output_dir: "logs/dev/feb12"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -166,14 +166,17 @@ eval:
   icl_episodes: 1
   icl_dataset: records
   feedback_on_invalid_action : True
-  instruction_path: null
+  beliefs_path: null
   perception_path: null
   instruction_prompt: null
   perception_prompt: null
-  instrucions_in_system_prompt: False
+  beliefs_in_system_prompt: False
   mode: "eval"
 
   evolve:
     num_steps: 20
+    num_experiments: 10
     rollouts_per_step: 1
+    num_baselines_rollouts: 1
     improve_mode: "both"
+    two_step: false

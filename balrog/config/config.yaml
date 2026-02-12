@@ -154,12 +154,15 @@ hydra:
   run:
     dir: .                     # Set the working directory to the current directory
   output_subdir: null          # Do not use an output subdirectory
+  job_logging:
+    root:
+      handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
 
 eval:
   output_dir: "logs/dev/feb12"
   resume_from: null
   num_workers: 32
-  num_episodes: 20
+  num_episodes: 1
   max_steps_per_episode: null
   save_trajectories: True
   save_images: False

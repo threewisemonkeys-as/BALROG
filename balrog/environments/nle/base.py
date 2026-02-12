@@ -11,14 +11,7 @@ from ..minihack import ACTIONS as MINIHACK_ACTIONS
 from .progress import get_progress_system
 from .render import tty_render_image
 from .render_rgb import rgb_render_image
-
-# Import perceptual features
-import sys
-from pathlib import Path
-# Add the BALROG root directory to the path to import perc
-balrog_root = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(balrog_root))
-from perc import compute_percepts, pretty
+from .perc import compute_percepts, pretty
 
 
 def decode_grid(screen_desc):

@@ -321,7 +321,7 @@ class Evaluator:
                             perception_output = perception_fn(long_term_text)
                         except Exception as e:
                             perception_output = f"Perception code failed with error -\n{e}"
-                            logging.warning(f"Perception module failed at step {step}: {e}")
+                            logging.warning(f"Perception module failed at initialization: {e}")
                         obs["text"]["short_term_context"] = f"\n{'='*10} Start of features from Perception Module {'='*10}\n{perception_output}\n\n{'='*10} End of features from Perception Module {'='*10}\n\n{obs['text']['short_term_context']}"
 
                     else:

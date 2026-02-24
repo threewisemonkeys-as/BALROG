@@ -159,10 +159,10 @@ hydra:
       handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
 
 eval:
-  output_dir: "logs/dev/feb12"
+  output_dir: "logs/dev/feb23"
   resume_from: null
   num_workers: 32
-  num_episodes: 1
+  num_episodes: 20
   max_steps_per_episode: null
   save_trajectories: True
   save_images: False
@@ -177,9 +177,12 @@ eval:
   mode: "eval"
 
   evolve:
-    num_steps: 20
-    num_experiments: 10
+    num_steps: 40
+    num_experiments: 1
     rollouts_per_step: 1
-    num_baselines_rollouts: 1
+    num_baseline_rollouts: 1
     improve_mode: "both"
-    two_step: false
+    two_step: true
+    include_experiment_summary: false
+    perc_example_max_trajs: 1    # Number of trajectories to sample perception examples from
+    perc_example_max_steps: 3    # Number of steps to sample per trajectory

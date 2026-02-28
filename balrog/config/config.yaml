@@ -159,7 +159,7 @@ hydra:
       handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
 
 eval:
-  output_dir: "logs/dev/feb23"
+  output_dir: "logs/dev/feb24"
   resume_from: null
   num_workers: 32
   num_episodes: 20

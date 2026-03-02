@@ -159,7 +159,7 @@ hydra:
       handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
 
 eval:
-  output_dir: "logs/dev/feb24"
+  output_dir: "logs/dev/mar02"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -186,3 +186,4 @@ eval:
     include_experiment_summary: false
     perc_example_max_trajs: 1    # Number of trajectories to sample perception examples from
     perc_example_max_steps: 3    # Number of steps to sample per trajectory
+    beliefs_style: "relaxed"

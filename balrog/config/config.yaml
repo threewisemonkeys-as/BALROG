@@ -187,3 +187,4 @@ eval:
     perc_example_max_trajs: 1    # Number of trajectories to sample perception examples from
     perc_example_max_steps: 3    # Number of steps to sample per trajectory
     beliefs_style: "relaxed"
+    experiment_mode: "free"

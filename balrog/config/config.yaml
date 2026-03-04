@@ -177,8 +177,8 @@ eval:
   mode: "eval"
 
   evolve:
-    num_steps: 40
-    num_experiments: 1
+    num_steps: 20
+    num_experiments: 10
     rollouts_per_step: 1
     num_baseline_rollouts: 1
     improve_mode: "both"

@@ -12,7 +12,7 @@ client:
   model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
   base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
   generate_kwargs:
-    temperature: 1.0            # Sampling temperature. If null the API default temperature is used instead
+    temperature: 0.0            # Sampling temperature. If null the API default temperature is used instead
     max_tokens: 4096            # Max tokens to generate in the response
   thinking_budget: null         # Thinking budget. Set to a number of tokens to control.
   timeout: 60                   # Timeout for API requests in seconds
@@ -188,3 +188,4 @@ eval:
     perc_example_max_steps: 3    # Number of steps to sample per trajectory
     beliefs_style: "relaxed"
     experiment_mode: "free"
+    explore_temp: 1.0            # Temperature for explore rollouts (experiments). Baseline rollouts use client.generate_kwargs.temperature.

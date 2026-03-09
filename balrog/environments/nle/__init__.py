@@ -4,6 +4,27 @@ from .auto_more import AutoMore
 from .base import NLELanguageWrapper
 
 
+def get_loaded_instruction_prompt(env, load: str, task: str):
+    action_strings = ",\n".join(f"{action}: {description}" for action, description in ACTIONS.items())
+    instruction_prompt = f"""
+You are an agent playing a game. The following are the possible actions you can take in the game, followed by a short description of each action:
+
+{action_strings}.
+
+In a moment I will present a history of actions and observations from the game.
+
+Tips -
+
+{ load }
+
+Goal: Your goal is to get as far as possible in the game.
+
+PLAY!
+""".strip()
+
+    return instruction_prompt
+
+
 class Role(enum.Enum):
     ARCHEOLOGIST = "arc"
     BARBARIAN = "bar"

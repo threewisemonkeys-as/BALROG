@@ -26,7 +26,7 @@ envs:
     seed: null                # Random seed; null means a random seed is used
   nle_kwargs:
     character: "@"            # Character representing the agent in NLE
-    max_episode_steps: 100_000  # Max steps per episode in NLE
+    max_episode_steps: 500  # Max steps per episode in NLE
     no_progress_timeout: 150    # Timeout for no progress in NLE
     savedir: null               # Directory to save NLE data; null disables saving
     save_ttyrec_every: 0        # Frequency of saving TTY recordings
@@ -72,8 +72,8 @@ envs:
     add_ruleset: True
 
 tasks:
-  nle_tasks:
-    - NetHackChallenge-v0       # Tasks for the NLE environment
+  # nle_tasks:
+    # - NetHackChallenge-v0       # Tasks for the NLE environment
 
   minihack_tasks:
     # - "MiniHack-Boxoban-Hard-v0"
@@ -93,62 +93,62 @@ tasks:
     # - "MiniHack-Wear-Distr-v0"
     # - "MiniHack-LockedDoor-v0"
 
-  crafter_tasks:
-    - "default"                 # Tasks for Crafter
+  # crafter_tasks:
+  #   - "default"                 # Tasks for Crafter
 
-  babyai_tasks:
-    - "BabyAI-MixedTrainLocal-v0/goto"
-    - "BabyAI-MixedTrainLocal-v0/pickup"
-    - "BabyAI-MixedTrainLocal-v0/open"
-    - "BabyAI-MixedTrainLocal-v0/putnext"
-    - "BabyAI-MixedTrainLocal-v0/pick_up_seq_go_to"
+  # babyai_tasks:
+  #   - "BabyAI-MixedTrainLocal-v0/goto"
+  #   - "BabyAI-MixedTrainLocal-v0/pickup"
+  #   - "BabyAI-MixedTrainLocal-v0/open"
+  #   - "BabyAI-MixedTrainLocal-v0/putnext"
+  #   - "BabyAI-MixedTrainLocal-v0/pick_up_seq_go_to"
 
-  textworld_tasks:
-    - "treasure_hunter"
-    - "the_cooking_game"
-    - "coin_collector"
+  # textworld_tasks:
+  #   - "treasure_hunter"
+  #   - "the_cooking_game"
+  #   - "coin_collector"
 
-  babaisai_tasks:
-    - "env/make_win-distr_obj_rule"
-    - "env/goto_win-distr_obj_rule"
-    - "env/goto_win"
-    - "env/goto_win-distr_obj"
-    - "env/goto_win-distr_rule"
-    - "env/goto_win-distr_obj-irrelevant_rule"
-    - "env/make_win-distr_obj"
-    - "env/make_win-distr_rule"
-    - "env/make_win"
-    - "env/make_win-distr_obj-irrelevant_rule"
-    - "env/two_room-goto_win"
-    - "env/two_room-goto_win-distr_obj_rule"
-    - "env/two_room-goto_win-distr_rule"
-    - "env/two_room-goto_win-distr_obj"
-    - "env/two_room-goto_win-distr_obj-irrelevant_rule"
-    - "env/two_room-goto_win-distr_win_rule"
-    - "env/two_room-break_stop-goto_win-distr_obj_rule"
-    - "env/two_room-break_stop-goto_win-distr_obj"
-    - "env/two_room-break_stop-goto_win-distr_rule"
-    - "env/two_room-break_stop-goto_win-distr_obj-irrelevant_rule"
-    - "env/two_room-break_stop-goto_win"
-    - "env/two_room-maybe_break_stop-goto_win-distr_obj_rule"
-    - "env/two_room-maybe_break_stop-goto_win"
-    - "env/two_room-maybe_break_stop-goto_win-distr_obj"
-    - "env/two_room-maybe_break_stop-goto_win-distr_rule"
-    - "env/two_room-maybe_break_stop-goto_win-distr_obj-irrelevant_rule"
-    - "env/two_room-make_win-distr_obj_rule"
-    - "env/two_room-make_win-distr_rule"
-    - "env/two_room-make_win"
-    - "env/two_room-make_win-distr_obj-irrelevant_rule"
-    - "env/two_room-make_win-distr_obj"
-    - "env/two_room-make_win-distr_win_rule"
-    - "env/two_room-break_stop-make_win-distr_obj_rule"
-    - "env/two_room-break_stop-make_win-distr_rule"
-    - "env/two_room-break_stop-make_win"
-    - "env/two_room-break_stop-make_win-distr_obj-irrelevant_rule"
-    - "env/two_room-break_stop-make_win-distr_obj"
-    - "env/two_room-make_you"
-    - "env/two_room-make_you-make_win"
-    - "env/two_room-make_wall_win"
+  # babaisai_tasks:
+  #   - "env/make_win-distr_obj_rule"
+  #   - "env/goto_win-distr_obj_rule"
+  #   - "env/goto_win"
+  #   - "env/goto_win-distr_obj"
+  #   - "env/goto_win-distr_rule"
+  #   - "env/goto_win-distr_obj-irrelevant_rule"
+  #   - "env/make_win-distr_obj"
+  #   - "env/make_win-distr_rule"
+  #   - "env/make_win"
+  #   - "env/make_win-distr_obj-irrelevant_rule"
+  #   - "env/two_room-goto_win"
+  #   - "env/two_room-goto_win-distr_obj_rule"
+  #   - "env/two_room-goto_win-distr_rule"
+  #   - "env/two_room-goto_win-distr_obj"
+  #   - "env/two_room-goto_win-distr_obj-irrelevant_rule"
+  #   - "env/two_room-goto_win-distr_win_rule"
+  #   - "env/two_room-break_stop-goto_win-distr_obj_rule"
+  #   - "env/two_room-break_stop-goto_win-distr_obj"
+  #   - "env/two_room-break_stop-goto_win-distr_rule"
+  #   - "env/two_room-break_stop-goto_win-distr_obj-irrelevant_rule"
+  #   - "env/two_room-break_stop-goto_win"
+  #   - "env/two_room-maybe_break_stop-goto_win-distr_obj_rule"
+  #   - "env/two_room-maybe_break_stop-goto_win"
+  #   - "env/two_room-maybe_break_stop-goto_win-distr_obj"
+  #   - "env/two_room-maybe_break_stop-goto_win-distr_rule"
+  #   - "env/two_room-maybe_break_stop-goto_win-distr_obj-irrelevant_rule"
+  #   - "env/two_room-make_win-distr_obj_rule"
+  #   - "env/two_room-make_win-distr_rule"
+  #   - "env/two_room-make_win"
+  #   - "env/two_room-make_win-distr_obj-irrelevant_rule"
+  #   - "env/two_room-make_win-distr_obj"
+  #   - "env/two_room-make_win-distr_win_rule"
+  #   - "env/two_room-break_stop-make_win-distr_obj_rule"
+  #   - "env/two_room-break_stop-make_win-distr_rule"
+  #   - "env/two_room-break_stop-make_win"
+  #   - "env/two_room-break_stop-make_win-distr_obj-irrelevant_rule"
+  #   - "env/two_room-break_stop-make_win-distr_obj"
+  #   - "env/two_room-make_you"
+  #   - "env/two_room-make_you-make_win"
+  #   - "env/two_room-make_wall_win"
 
 hydra:
   run:
@@ -159,7 +159,7 @@ hydra:
       handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
 
 eval:
-  output_dir: "logs/dev/mar02"
+  output_dir: "logs/dev/mar09"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -177,8 +177,8 @@ eval:
   mode: "eval"
 
   evolve:
-    num_steps: 20
-    num_experiments: 10
+    num_steps: 10
+    num_experiments: 5
     rollouts_per_step: 1
     num_baseline_rollouts: 1
     improve_mode: "both"

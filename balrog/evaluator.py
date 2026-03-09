@@ -19,7 +19,7 @@ from balrog.dataset import InContextDataset
 from balrog.environments import make_env
 from balrog.utils import get_unique_seed
 
-from balrog.environments.minihack import get_loaded_instruction_prompt
+from balrog.environments.nle import get_loaded_instruction_prompt
 
 logger = logging.getLogger(__name__)
 

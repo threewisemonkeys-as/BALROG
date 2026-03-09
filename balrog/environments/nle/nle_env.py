@@ -18,11 +18,12 @@ def make_nle_env(env_name, task, config, render_mode: Optional[str] = None):
     skip_more = nle_kwargs.pop("skip_more", False)
     include_lang_obs = nle_kwargs.pop("include_lang_obs", True)
     include_perc_obs = nle_kwargs.pop("include_perc_obs", False)
+    use_textual_desc = nle_kwargs.pop("use_textual_desc", False)
     vlm = True if config.agent.max_image_history > 0 else False
     env = gym.make(task, **nle_kwargs)
     if skip_more:
         env = AutoMore(env)
-    env = NLELanguageWrapper(env, vlm=vlm, include_lang_obs=include_lang_obs, include_perc_obs=include_perc_obs)
+    env = NLELanguageWrapper(env, vlm=vlm, include_lang_obs=include_lang_obs, include_perc_obs=include_perc_obs, use_textual_desc=use_textual_desc)
 
     # wrap NLE with timeout
     env = NLETimeLimit(env)

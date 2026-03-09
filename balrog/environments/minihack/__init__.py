@@ -74,7 +74,7 @@ def get_instruction_prompt(env, task="MiniHack-ExploreMaze-Hard-Mapped-v0"):
     available_actions = get_available_actions(env)
     action_strings = ",\n".join(f"{action}: {description}" for action, description in available_actions.items())
     instruction_prompt = f"""
-You are an agent playing MiniHack. The following are the possible actions you can take in the game, followed by a short description of each action:
+You are an agent playing a game. The following are the possible actions you can take in the game, followed by a short description of each action:
 
 {action_strings}.
 
@@ -95,7 +95,7 @@ def get_loaded_instruction_prompt(env, load: str, task: str):
     available_actions = get_available_actions(env)
     action_strings = ",\n".join(f"{action}: {description}" for action, description in available_actions.items())
     instruction_prompt = f"""
-You are an agent playing MiniHack. The following are the possible actions you can take in the game, followed by a short description of each action:
+You are an agent playing a game. The following are the possible actions you can take in the game, followed by a short description of each action:
 
 {action_strings}.
 

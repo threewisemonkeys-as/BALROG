@@ -210,7 +210,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
             "text_cursor": self.nle_language.text_cursor(glyphs, blstats, tty_cursor).decode("latin-1"),
             "tty_chars": nle_obsv["tty_chars"],
             "tty_cursor": nle_obsv["tty_cursor"],
-            "screen_descriptions": nle_obsv["screen_descriptions"],
+            **({"screen_descriptions": nle_obsv["screen_descriptions"]} if "screen_descriptions" in nle_obsv else {}),
         }
 
     def render_text(self, nle_obsv):
@@ -249,7 +249,7 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         ascii_map = self.ascii_render(nle_obsv["tty_chars"])
         map_display = "\n".join(ascii_map.split("\n")[1:])  # remove first line
         
-        if self.use_textual_desc:
+        if self.use_textual_desc and "screen_descriptions" in nle_obsv:
             grid_text = decode_grid(nle_obsv["screen_descriptions"])
             map_display += '\n\nmap with descriptions:\n' + render_grid_trimmed(grid_text, pad=1)
         

@@ -397,7 +397,7 @@ class Evaluator:
                     obs["text"]["short_term_context"] = f"\n{'='*10} Start of features from Perception Module {'='*10}\n{perception_output}\n\n{'='*10} End of features from Perception Module {'='*10}\n\n{'='*10} Start of Auxilliary Observation {'='*10}\n{obs['text']['short_term_context']}\n\n{'='*10} End of Auxilliary Observation {'='*10}"
 
                 action = response.completion
-                log_obs = f'{obs["text"]["short_term_context"]}\n\n{"="*10} Start of Direct Game Observation {"="*10}\n{obs["text"]["long_term_context"]}\n\n{"="*10} End of Direct Game Observation {"="*10}'
+                log_obs = f'{obs["text"]["short_term_context"]}\n\n{"="*10} Start of Direct Observation {"="*10}\n{obs["text"]["long_term_context"]}\n\n{"="*10} End of Direct Observation {"="*10}'
                 # Write the step data to the CSV file
                 csv_writer.writerow(
                     [

@@ -158,6 +158,18 @@ hydra:
     root:
       handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
 
+offline:
+  mode: "knowledge"          # "knowledge" | "both" | "policy"
+  trajectories_dir: null     # Path to CSV+JSON trajectory files
+  initial_beliefs_path: null # Starting beliefs file (world_knowledge + optional policy)
+  world_knowledge_path: null # For "policy" mode
+  objective: ""              # For "policy" mode
+  num_steps: 10
+  batch_size: 10              # Trajectories per batch (knowledge/both)
+  num_refinements: 1         # LLM refinement passes per step (each feeds into the next)
+  output_dir: "logs/offline"
+  resume_from: null
+
 eval:
   output_dir: "logs/dev/mar09"
   resume_from: null

@@ -19,6 +19,7 @@ class RobustCoTAgent(BaseAgent):
         super().__init__(client_factory, prompt_builder)
         self.remember_cot = config.agent.remember_cot
         self.instruction_text = config.eval.get("instruction_prompt", None)
+        self.experiment_goal = None
 
     def act(self, obs, prev_action=None):
         """Generate the next action using chain-of-thought reasoning based on the current observation.
@@ -42,6 +43,10 @@ class RobustCoTAgent(BaseAgent):
 Tips -
 {self.instruction_text}
             """.strip()
+
+        # Inject experiment goal if set
+        if self.experiment_goal:
+            messages[-1].content += f"\n\nCurrent experimental goal: {self.experiment_goal}"
 
         # Updated instructions: chain of thought + strict output format
         messages[-1].content += "\n\n" + """
@@ -69,8 +74,10 @@ Replace YOUR_CHOSEN_ACTION with the chosen action.
 Keep the plan very brief.
         """.strip()
 
+        # Store final messages for external inspection (e.g. visualization)
+        self.last_messages = messages
+
         # Generate the CoT reasoning
-        # print(f"{len(messages)=}")
         cot_reasoning = self.client.generate(messages)
         # print(cot_reasoning)
 

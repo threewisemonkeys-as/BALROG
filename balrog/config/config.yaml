@@ -10,6 +10,8 @@ agent:
 client:
   client_name: openrouter           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
   model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
+  # client_name: deepseek           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
+  # model_id: deepseek-chat
   base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
   generate_kwargs:
     temperature: 0.0            # Sampling temperature. If null the API default temperature is used instead
@@ -36,7 +38,7 @@ envs:
     use_textual_desc: False
   minihack_kwargs:
     character: "@"
-    max_episode_steps: 100
+    max_episode_steps: 50
     penalty_step: -0.01
     penalty_time: 0.0
     penalty_mode: constant
@@ -171,7 +173,7 @@ offline:
   resume_from: null
 
 eval:
-  output_dir: "logs/dev/mar09"
+  output_dir: "logs/dev/apr8"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -189,8 +191,8 @@ eval:
   mode: "eval"
 
   evolve:
-    num_steps: 10
-    num_experiments: 5
+    num_steps: 5
+    num_experiments: 10
     rollouts_per_step: 1
     num_baseline_rollouts: 1
     improve_mode: "both"
@@ -201,3 +203,39 @@ eval:
     beliefs_style: "relaxed"
     experiment_mode: "free"
     explore_temp: 1.0            # Temperature for explore rollouts (experiments). Baseline rollouts use client.generate_kwargs.temperature.
+    num_trajectories: 1          # Number of trajectories per b_learn step
+    num_improve_iterations: 5
+    experiments_per_rollout: 1
+
+    # Mixed explore settings
+    mixed_explore: false              # Boolean flag to enable mixed_explore.py mode
+    num_initial_trajectories: 3       # Baseline rollouts in step 0
+    num_trajectories_per_iteration: 3 # Rollouts per step
+    num_belief_improvement: 5         # Inner scoring/improvement iterations
+    use_qa_pairs: true                # Toggle Q&A pair extraction and scoring
+    use_moments: true                 # Toggle critical moment extraction and scoring
+    use_raw_observations: true        # Use full raw observations (+ perception) in moment scoring/improvement
+    num_perception_improvement: 5     # Inner perception improvement iterations (each sees different examples)
+    num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
+
+    # Stepwise B-learn settings (stepwise_b_learn.py)
+    n_environment_steps: 100          # Total env steps budget across all episodes
+    max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
+    max_perception_iterations: 10      # Max improvement turns for track 1a (perception-only)
+    use_qa_improve: true              # Enable track 2 (QA-based improvement)
+    use_moments_improve: false         # Enable track 3 (critical moment improvement)
+    max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
+    max_moments_iterations: 1         # Max improvement turns for track 3 (critical moments)
+    conversational_improve: true      # true = multi-turn conversations per track; false = independent LLM calls (legacy)
+    max_moments_per_forward: 20       # Batch size for moment forward pass
+    max_qa_per_forward: 20            # Batch size for QA forward pass
+    max_total_moments: 20             # Cap on total accumulated critical moments
+    max_total_qa_pairs: 20            # Cap on total accumulated QA pairs
+    # num_experiments: 5              # (shared with explore above)
+    num_sample_obs: 3                 # Sampled observations for perception validation
+    # explore_temp: 1.0               # (shared with explore above)
+    artifact_update_interval: 1       # Extract Q&A/moments every N env steps
+    improve_interval: 1               # Run 3-track improve loop every N env steps
+    experiment_interval: 1           # Generate new experiments every N env steps
+    max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
+

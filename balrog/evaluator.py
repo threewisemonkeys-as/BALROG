@@ -19,7 +19,6 @@ from balrog.dataset import InContextDataset
 from balrog.environments import make_env
 from balrog.utils import get_unique_seed
 
-from balrog.environments.nle import get_loaded_instruction_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -272,11 +271,31 @@ class Evaluator:
             "total_cost": 0.0,
         }
 
-        if (instruction_text := self.config.eval.get("instruction_prompt", None)) is not None and self.config.eval.get("beliefs_in_system_prompt", False):
+        goal_override = self.config.eval.get("goal_override", None)
+        instruction_text = self.config.eval.get("instruction_prompt", None)
+        if instruction_text is not None and self.config.eval.get("beliefs_in_system_prompt", False):
+            if self.env_name == "minihack":
+                from balrog.environments.minihack import get_loaded_instruction_prompt
+            else:
+                from balrog.environments.nle import get_loaded_instruction_prompt
             instruction_prompt = get_loaded_instruction_prompt(
                 env=env,
                 load=instruction_text,
-                task=task
+                task=task,
+                goal_override=goal_override,
+            )
+            agent.prompt_builder.update_instruction_prompt(instruction_prompt)
+        elif goal_override:
+            # No custom beliefs but we have a goal override (e.g. experiments)
+            if self.env_name == "minihack":
+                from balrog.environments.minihack import get_loaded_instruction_prompt
+            else:
+                from balrog.environments.nle import get_loaded_instruction_prompt
+            instruction_prompt = get_loaded_instruction_prompt(
+                env=env,
+                load=instruction_text or "",
+                task=task,
+                goal_override=goal_override,
             )
             agent.prompt_builder.update_instruction_prompt(instruction_prompt)
         else:

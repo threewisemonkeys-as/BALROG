@@ -176,6 +176,11 @@ class OpenAIWrapper(LLMClientWrapper):
                     api_key=os.environ["OPENROUTER_API_KEY"],
                     base_url="https://openrouter.ai/api/v1",
                 )
+            elif self.client_name.lower() == "deepseek":
+                self.client = OpenAI(
+                    api_key=os.environ["DEEPSEEK_API_KEY"],
+                    base_url="https://api.deepseek.com",
+                )
             elif (
                 self.client_name.lower() == "nvidia"
                 or self.client_name.lower() == "xai"
@@ -549,6 +554,7 @@ def create_llm_client(client_config):
             or "nvidia" in client_name_lower
             or "xai" in client_name_lower
             or "openrouter" in client_name_lower
+            or "deepseek" in client_name_lower
         ):
             # NVIDIA and XAI use OpenAI-compatible API, so we use the OpenAI wrapper
             return OpenAIWrapper(client_config)

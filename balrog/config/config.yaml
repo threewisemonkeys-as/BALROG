@@ -9,7 +9,7 @@ agent:
 
 client:
   client_name: openrouter           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
-  model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
+  model_id: google/gemini-2.5-flash-lite              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
   # client_name: deepseek           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
   # model_id: deepseek-chat
   base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
@@ -173,7 +173,7 @@ offline:
   resume_from: null
 
 eval:
-  output_dir: "logs/dev/apr8"
+  output_dir: "logs/dev/apr9"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -221,10 +221,13 @@ eval:
     # Stepwise B-learn settings (stepwise_b_learn.py)
     n_environment_steps: 100          # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
-    max_perception_iterations: 5      # Max improvement turns for track 1a (perception-only)
+    max_perception_iterations:
+      - [10, 10]
+      - [10, 5]
+      - [0, 3]
     use_qa_improve: true              # Enable track 2 (QA-based improvement)
     use_moments_improve: false         # Enable track 3 (critical moment improvement)
-    max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
+    # max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
     max_moments_iterations: 1         # Max improvement turns for track 3 (critical moments)
     conversational_improve: true      # true = multi-turn conversations per track; false = independent LLM calls (legacy)
     max_moments_per_forward: 20       # Batch size for moment forward pass

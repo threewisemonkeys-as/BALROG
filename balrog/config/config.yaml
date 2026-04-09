@@ -221,7 +221,7 @@ eval:
     # Stepwise B-learn settings (stepwise_b_learn.py)
     n_environment_steps: 100          # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
-    max_perception_iterations: 10      # Max improvement turns for track 1a (perception-only)
+    max_perception_iterations: 5      # Max improvement turns for track 1a (perception-only)
     use_qa_improve: true              # Enable track 2 (QA-based improvement)
     use_moments_improve: false         # Enable track 3 (critical moment improvement)
     max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
@@ -230,7 +230,7 @@ eval:
     max_moments_per_forward: 20       # Batch size for moment forward pass
     max_qa_per_forward: 20            # Batch size for QA forward pass
     max_total_moments: 20             # Cap on total accumulated critical moments
-    max_total_qa_pairs: 20            # Cap on total accumulated QA pairs
+    max_total_qa_pairs: 50            # Cap on total accumulated QA pairs
     # num_experiments: 5              # (shared with explore above)
     num_sample_obs: 3                 # Sampled observations for perception validation
     # explore_temp: 1.0               # (shared with explore above)

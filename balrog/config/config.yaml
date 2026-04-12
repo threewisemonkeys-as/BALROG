@@ -9,7 +9,7 @@ agent:
 
 client:
   client_name: openrouter           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
-  model_id: google/gemini-2.5-flash-lite              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
+  model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
   # client_name: deepseek           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
   # model_id: deepseek-chat
   base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
@@ -23,7 +23,8 @@ client:
   alternate_roles: False        # Whether the client requires alternating between the agent and the environment
 
 envs:
-  names: minihack   # Environments to evaluate, separated by hyphens
+  # names: minihack   # Environments to evaluate, separated by hyphens
+  names: nle   # Environments to evaluate, separated by hyphens
   env_kwargs:
     seed: null                # Random seed; null means a random seed is used
   nle_kwargs:
@@ -38,7 +39,7 @@ envs:
     use_textual_desc: False
   minihack_kwargs:
     character: "@"
-    max_episode_steps: 50
+    max_episode_steps: 100
     penalty_step: -0.01
     penalty_time: 0.0
     penalty_mode: constant
@@ -74,8 +75,8 @@ envs:
     add_ruleset: True
 
 tasks:
-  # nle_tasks:
-    # - NetHackChallenge-v0       # Tasks for the NLE environment
+  nle_tasks:
+    - NetHackChallenge-v0       # Tasks for the NLE environment
 
   minihack_tasks:
     # - "MiniHack-Boxoban-Hard-v0"
@@ -173,7 +174,7 @@ offline:
   resume_from: null
 
 eval:
-  output_dir: "logs/dev/apr9"
+  output_dir: "logs/dev/apr12"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -222,9 +223,8 @@ eval:
     n_environment_steps: 100          # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
-      - [10, 10]
-      - [10, 5]
-      - [0, 3]
+      - [20, 10]
+      - [0, 5]
     use_qa_improve: true              # Enable track 2 (QA-based improvement)
     use_moments_improve: false         # Enable track 3 (critical moment improvement)
     # max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
@@ -238,7 +238,7 @@ eval:
     num_sample_obs: 3                 # Sampled observations for perception validation
     # explore_temp: 1.0               # (shared with explore above)
     artifact_update_interval: 1       # Extract Q&A/moments every N env steps
-    improve_interval: 1               # Run 3-track improve loop every N env steps
+    improve_interval: 3               # Run 3-track improve loop every N env steps
     experiment_interval: 1           # Generate new experiments every N env steps
     max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
 

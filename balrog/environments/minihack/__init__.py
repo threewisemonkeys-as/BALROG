@@ -54,7 +54,9 @@ def get_task_goal(task: str):
         # goal = "Your goal is to explore the level, fight monsters, and navigate rooms and mazes to ultimately reach the stairs down (>)"
         # goal = "Your goal is to learn as much about the environment as possible"
         # goal = "Your goal is to explore and ultimately reach the stairs down (>)"
-        goal = ""
+        # goal = ""
+        goal = "Your goal is to get as far as possible in the game."
+        # goal = "Your goal is to figure out how the world works and make progress by reaching the stairs down (>) efficiently"
     elif "boxoban" in task.lower():
         goal = "You are playing Boxoban, a box-pushing game inspired by Sokoban. Your goal is to push the boulders onto the fountains on the map. You can push the boulders by walking into them, as long as there are no obstacles behind them."
     elif "lavacross" in task.lower():

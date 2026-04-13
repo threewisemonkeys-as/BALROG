@@ -220,7 +220,7 @@ eval:
     num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
 
     # Stepwise B-learn settings (stepwise_b_learn.py)
-    n_environment_steps: 100          # Total env steps budget across all episodes
+    n_environment_steps: 500          # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
       - [20, 10]
@@ -238,7 +238,7 @@ eval:
     num_sample_obs: 3                 # Sampled observations for perception validation
     # explore_temp: 1.0               # (shared with explore above)
     artifact_update_interval: 1       # Extract Q&A/moments every N env steps
-    improve_interval: 3               # Run 3-track improve loop every N env steps
+    improve_interval: 5               # Run 3-track improve loop every N env steps
     experiment_interval: 1           # Generate new experiments every N env steps
     max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
 

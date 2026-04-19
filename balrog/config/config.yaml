@@ -2,7 +2,7 @@ agent:
   type: robust_cot       # Type of agent to use (e.g., 'naive', 'cot', etc.)
   remember_cot: True     # Whether the agent should remember its reasoning across turns
   max_text_history: 4   # Maximum number of text messages to keep in the history
-  max_image_history: 2   # Maximum number of images to keep in the history
+  max_image_history: 4   # Maximum number of images to keep in the history
   max_cot_history: 4    # Maximum number of chain-of-thought steps to keep in history (if using 'cot' type of agent)
   max_icl_history: 1000   # Maximum number of ICL steps to keep in history (if using 'few_shot' type of agent)
   cache_icl: False
@@ -10,6 +10,7 @@ agent:
 client:
   client_name: openrouter           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
   model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
+  # model_id: anthropic/claude-sonnet-4.6
   # client_name: deepseek           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
   # model_id: deepseek-chat
   base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
@@ -180,7 +181,7 @@ offline:
   resume_from: null
 
 eval:
-  output_dir: "logs/dev/apr15"
+  output_dir: "logs/dev/apr19"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -226,10 +227,9 @@ eval:
     num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
 
     # Stepwise B-learn settings (stepwise_b_learn.py)
-    n_environment_steps: 100          # Total env steps budget across all episodes
+    n_environment_steps: 15          # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
-      - [10, 10]
       - [0, 5]
     use_qa_improve: true              # Enable track 2 (QA-based improvement)
     use_moments_improve: false         # Enable track 3 (critical moment improvement)
@@ -247,4 +247,8 @@ eval:
     improve_interval: 1               # Run 3-track improve loop every N env steps
     experiment_interval: 1           # Generate new experiments every N env steps
     max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
+    perception_history_window: 5     # Cap on #raw obs passed to perceive(observation_history)
+    perception_input_tail: 2          # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
+    hide_obs_when_image: true        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
+    mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
 

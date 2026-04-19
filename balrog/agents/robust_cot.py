@@ -40,7 +40,7 @@ class RobustCoTAgent(BaseAgent):
 
         if self.instruction_text is not None and self.instruction_text.strip() != "":
             messages[-1].content += "\n\n" + f"""
-Tips -
+World knowledge and strategy -
 {self.instruction_text}
             """.strip()
 

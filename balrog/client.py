@@ -34,6 +34,61 @@ httpx_logger.setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Mock mode: short-circuit LLM API calls while still constructing and logging
+# the real agent prompt. When enabled, every wrapper's generate() returns a
+# synthesized response at zero cost. The optional action provider lets callers
+# plug in env-specific action sampling; otherwise a generic placeholder is used.
+# ---------------------------------------------------------------------------
+_MOCK_MODE = False
+_MOCK_ACTION_PROVIDER = None  # Optional callable() -> str
+
+
+def set_mock_mode(enabled: bool) -> None:
+    """Enable/disable mock mode for all LLMClientWrapper subclasses."""
+    global _MOCK_MODE
+    _MOCK_MODE = bool(enabled)
+
+
+def is_mock_mode() -> bool:
+    return _MOCK_MODE
+
+
+def set_mock_action_provider(fn) -> None:
+    """Set a zero-arg callable that returns a valid action string for the current env."""
+    global _MOCK_ACTION_PROVIDER
+    _MOCK_ACTION_PROVIDER = fn
+
+
+def _mock_agent_completion() -> str:
+    """Build a completion that parses as a valid robust_cot/chain-of-thought response."""
+    try:
+        action = _MOCK_ACTION_PROVIDER() if _MOCK_ACTION_PROVIDER is not None else "wait"
+    except Exception:
+        action = "wait"
+    return (
+        "<plan>\n"
+        "<goal>[mock] exploring environment</goal>\n"
+        "<history>[mock] random-action rollout</history>\n"
+        "<reasoning>[mock] selecting a random valid action</reasoning>\n"
+        "<steps>[mock] continue random exploration</steps>\n"
+        "</plan>\n\n"
+        f"<|ACTION|>{action}<|END|>"
+    )
+
+
+def _mock_llm_response(model_id: str) -> "LLMResponse":
+    return LLMResponse(
+        model_id=model_id,
+        completion=_mock_agent_completion(),
+        stop_reason="stop",
+        input_tokens=0,
+        output_tokens=0,
+        reasoning=None,
+        cost=0.0,
+    )
+
+
 class LLMClientWrapper:
     """Base class for LLM client wrappers.
 
@@ -223,6 +278,8 @@ class OpenAIWrapper(LLMClientWrapper):
             LLMResponse: The response from the OpenAI API.
         """
         self.log_prompt(messages)
+        if _MOCK_MODE:
+            return _mock_llm_response(self.model_id)
         self._initialize_client()
         converted_messages = self.convert_messages(messages)
 
@@ -377,6 +434,8 @@ class GoogleGenerativeAIWrapper(LLMClientWrapper):
             LLMResponse: The response from the Generative AI API.
         """
         self.log_prompt(messages)
+        if _MOCK_MODE:
+            return _mock_llm_response(self.model_id)
         self._initialize_client()
 
         converted_messages = self.convert_messages(messages)
@@ -500,6 +559,8 @@ class ClaudeWrapper(LLMClientWrapper):
             LLMResponse: The response from the Claude API.
         """
         self.log_prompt(messages)
+        if _MOCK_MODE:
+            return _mock_llm_response(self.model_id)
         self._initialize_client()
         converted_messages = self.convert_messages(messages)
 

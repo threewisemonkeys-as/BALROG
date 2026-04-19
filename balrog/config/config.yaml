@@ -25,8 +25,9 @@ client:
 
 envs:
   # names: minihack   # Environments to evaluate, separated by hyphens
-  # names: nle   # Environments to evaluate, separated by hyphens
-  names: arc_agi   # Environments to evaluate, separated by hyphens
+  # names: nle
+  # names: arc_agi 
+  names: autumn  
   env_kwargs:
     seed: null                # Random seed; null means a random seed is used
   nle_kwargs:
@@ -77,10 +78,21 @@ envs:
     add_ruleset: True
   arc_agi_kwargs:
     max_episode_steps: 250
+  autumn_kwargs:
+    task_type: "interactive"    # "interactive" | "cd" (MFP/planning: todo)
+    max_episode_steps: 300
+    stack_frames: false
+    skip_frames: false
+    render_mode: "image"        # "text" = text only; "image" = text + image (dual)
+    # data_dir: null            # default: MARAProtocol/.../example_benchmark
+    logging_path: "./logs/autumn"
 
 tasks:
   arc_agi_tasks:
     - "ls20"                    # ARC-AGI 3 game IDs
+
+  autumn_tasks:
+    - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
 
   nle_tasks:
     - NetHackChallenge-v0       # Tasks for the NLE environment
@@ -227,7 +239,7 @@ eval:
     num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
 
     # Stepwise B-learn settings (stepwise_b_learn.py)
-    n_environment_steps: 15          # Total env steps budget across all episodes
+    n_environment_steps: 5         # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
       - [0, 5]
@@ -249,6 +261,6 @@ eval:
     max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
     perception_history_window: 5     # Cap on #raw obs passed to perceive(observation_history)
     perception_input_tail: 2          # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
-    hide_obs_when_image: true        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
-    mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
+    hide_obs_when_image: false        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
+    mock_mode: true                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
 

@@ -26,8 +26,8 @@ client:
 envs:
   # names: minihack   # Environments to evaluate, separated by hyphens
   # names: nle
-  # names: arc_agi 
-  names: autumn  
+  names: arc_agi 
+  # names: autumn  
   env_kwargs:
     seed: null                # Random seed; null means a random seed is used
   nle_kwargs:
@@ -92,7 +92,8 @@ tasks:
     - "ls20"                    # ARC-AGI 3 game IDs
 
   autumn_tasks:
-    - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
+    # - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
+    - "7WWW9"
 
   nle_tasks:
     - NetHackChallenge-v0       # Tasks for the NLE environment
@@ -193,7 +194,7 @@ offline:
   resume_from: null
 
 eval:
-  output_dir: "logs/dev/apr19"
+  output_dir: "logs/dev/apr20"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -239,7 +240,7 @@ eval:
     num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
 
     # Stepwise B-learn settings (stepwise_b_learn.py)
-    n_environment_steps: 5         # Total env steps budget across all episodes
+    n_environment_steps: 15         # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
       - [0, 5]
@@ -252,6 +253,8 @@ eval:
     max_qa_per_forward: 20            # Batch size for QA forward pass
     max_total_moments: 20             # Cap on total accumulated critical moments
     max_total_qa_pairs: 50            # Cap on total accumulated QA pairs
+    max_answered_qa_pairs: 50         # Stepwise EB: cap on answered QA pairs
+    max_unanswered_qa_pairs: 50       # Stepwise EB: cap on unanswered QA pairs
     # num_experiments: 5              # (shared with explore above)
     num_sample_obs: 3                 # Sampled observations for perception validation
     # explore_temp: 1.0               # (shared with explore above)
@@ -262,5 +265,6 @@ eval:
     perception_history_window: 5     # Cap on #raw obs passed to perceive(observation_history)
     perception_input_tail: 2          # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
     hide_obs_when_image: false        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
-    mock_mode: true                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
-
+    question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
+    mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
+    include_policy: false

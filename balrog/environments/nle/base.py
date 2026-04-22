@@ -65,18 +65,19 @@ def render_grid_trimmed(text_grid, pad=18, max_cell_chars=18, sep="|", empty_tok
 
 
 class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
-    def __init__(self, env, vlm=False, include_lang_obs=True, include_perc_obs=False, use_textual_desc=False):
+    def __init__(self, env, vlm=False, include_lang_obs=True, include_perc_obs=False, use_textual_desc=False, hide_obs_when_image=False):
         super().__init__(env, use_language_action=True)
         self.nle_language = nle_language_obsv.NLELanguageObsv()
         self.language_action_space = self.create_action_space()
         self.env = env
         self.vlm = vlm
+        self.hide_obs_when_image = hide_obs_when_image
         self.done = False
 
-        if not vlm:
-            self.prompt_mode = "hybrid"
-        else:
+        if vlm and hide_obs_when_image:
             self.prompt_mode = "language"
+        else:
+            self.prompt_mode = "hybrid"
 
         self.progress = get_progress_system(self.env)
         self.max_steps = self.env.unwrapped._max_episode_steps

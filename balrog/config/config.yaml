@@ -26,8 +26,8 @@ client:
 envs:
   # names: minihack   # Environments to evaluate, separated by hyphens
   # names: nle
-  names: arc_agi 
-  # names: autumn  
+  # names: arc_agi 
+  names: autumn  
   env_kwargs:
     seed: null                # Random seed; null means a random seed is used
   nle_kwargs:
@@ -90,9 +90,10 @@ envs:
 tasks:
   arc_agi_tasks:
     - "ls20"                    # ARC-AGI 3 game IDs
+    - "sp80"
 
   autumn_tasks:
-    # - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
+    - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
     - "7WWW9"
 
   nle_tasks:
@@ -240,7 +241,7 @@ eval:
     num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
 
     # Stepwise B-learn settings (stepwise_b_learn.py)
-    n_environment_steps: 15         # Total env steps budget across all episodes
+    n_environment_steps: 50         # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
       - [0, 5]
@@ -253,8 +254,8 @@ eval:
     max_qa_per_forward: 20            # Batch size for QA forward pass
     max_total_moments: 20             # Cap on total accumulated critical moments
     max_total_qa_pairs: 50            # Cap on total accumulated QA pairs
-    max_answered_qa_pairs: 50         # Stepwise EB: cap on answered QA pairs
-    max_unanswered_qa_pairs: 50       # Stepwise EB: cap on unanswered QA pairs
+    max_answered_qa_pairs: 40         # Stepwise EB: cap on answered QA pairs
+    max_unanswered_qa_pairs: 10       # Stepwise EB: cap on unanswered QA pairs
     # num_experiments: 5              # (shared with explore above)
     num_sample_obs: 3                 # Sampled observations for perception validation
     # explore_temp: 1.0               # (shared with explore above)
@@ -268,3 +269,32 @@ eval:
     question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
     mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
     include_policy: false
+
+  # openhands baseline (openhands_stepwise.py): a coding agent driven by the
+  # OpenHands SDK interacting per-step with the same set of envs used by the
+  # stepwise_eb_learn baseline. Single Conversation persists across episodes.
+  openhands:
+    n_environment_steps: 50           # Total env steps budget across all episodes (mirrors eval.evolve.n_environment_steps)
+    history_window: 50                # N entries retained in <workspace>/last_n_steps.json
+    max_iteration_per_step: 50        # Cap on OpenHands inner tool-calling iterations per env step
+    model: "anthropic/claude-sonnet-4-5-20250929"  # OpenHands LiteLLM model id
+    api_key_env: "ANTHROPIC_API_KEY"  # Env var holding the API key
+    base_url: null                    # Optional custom base URL (e.g., proxy)
+    temperature: null                 # Null = use model default
+    max_output_tokens: null           # Null = use model default
+    enable_browser_tools: false       # Forward to openhands.tools.preset.default.get_default_tools
+    mock_mode: true                   # If true, skip the LLM entirely; pick a random valid action each step (smoke-test default)
+
+  # simple baseline (simple_stepwise.py): a tool-less LLM agent. Mirrors the
+  # openhands baseline's per-step loop but the LLM has no workspace and no
+  # tools — it reads the current observation + valid actions and responds with
+  # its chosen action wrapped in <action>...</action> XML tags.
+  simple:
+    n_environment_steps: 50           # Total env steps budget across all episodes
+    history_window: 50                # Max user turns retained in the rolling message history (system msg is always kept)
+    model: "anthropic/claude-sonnet-4-5-20250929"  # LiteLLM model id
+    api_key_env: "ANTHROPIC_API_KEY"  # Env var holding the API key
+    base_url: null                    # Optional custom base URL (e.g., proxy)
+    temperature: null                 # Null = use model default
+    max_output_tokens: null           # Null = use model default
+    mock_mode: true                   # If true, stub litellm.completion; synthesize a random valid <action>...</action> each step

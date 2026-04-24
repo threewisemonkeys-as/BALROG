@@ -269,6 +269,10 @@ eval:
     hide_obs_when_image: false        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
     question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
     mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
+    autumn_eval_after_learn: false     # If true, run frozen AutumnBench test phases after EB exploration finishes.
+    autumn_eval_task_types: ["mfp", "cd", "planning"]
+    autumn_eval_max_steps: 501
+    autumn_eval_render_mode: "text"    # Text is safest for MFP/CD/planning scoring; exploration can still use image mode.
     include_policy: false
     question_scoring_method: llm_trim      # stepwise_eb_learn: question trim strategy. llm_trim | b_diff_full | b_diff_light
     question_scoring_max_concurrent: 8     # stepwise_eb_learn: semaphore cap for B-diff scoring fan-out

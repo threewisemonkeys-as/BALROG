@@ -36,6 +36,10 @@ def make_env(env_name, task, config, render_mode=None):
         from balrog.environments.crafter.crafter_env import make_crafter_env
 
         base_env = make_crafter_env(env_name, task, config, render_mode=render_mode)
+    elif env_name == "autumn":
+        from autumn_env import make_autumn_env
+
+        return make_autumn_env(task, config)
     elif env_name == "textworld":
         from balrog.environments.textworld.textworld_env import make_textworld_env
 

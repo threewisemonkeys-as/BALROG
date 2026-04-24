@@ -1,5 +1,6 @@
 import copy
 import csv
+import inspect
 import json
 import logging
 import multiprocessing
@@ -21,6 +22,36 @@ from balrog.utils import get_unique_seed
 
 
 logger = logging.getLogger(__name__)
+
+
+def _perception_uses_history(perception_fn) -> bool:
+    try:
+        params = list(inspect.signature(perception_fn).parameters.values())
+    except (TypeError, ValueError):
+        return False
+    if not params:
+        return False
+    first = params[0]
+    annotation = str(first.annotation).lower()
+    return "history" in first.name.lower() or "list" in annotation
+
+
+def _run_perception_fn(perception_fn, raw_obs_history, history_window=None) -> str:
+    history = list(raw_obs_history)
+    if history_window is not None:
+        history = history[-int(history_window):]
+    raw_text = history[-1] if history else ""
+    try:
+        if _perception_uses_history(perception_fn):
+            return perception_fn(history)
+        return perception_fn(raw_text)
+    except TypeError:
+        # Stepwise EB perception modules take a history list; older modules took
+        # one raw observation string. Try the other convention before failing.
+        try:
+            return perception_fn(history)
+        except Exception:
+            return perception_fn(raw_text)
 
 
 class EvaluatorManager:
@@ -273,7 +304,14 @@ class Evaluator:
 
         goal_override = self.config.eval.get("goal_override", None)
         instruction_text = self.config.eval.get("instruction_prompt", None)
-        if instruction_text is not None and self.config.eval.get("beliefs_in_system_prompt", False):
+        if self.env_name == "autumn":
+            instruction_prompt = env.get_instruction_prompt(instructions=None)
+            if instruction_text:
+                instruction_prompt += f"\n\n{instruction_text}"
+            if goal_override:
+                instruction_prompt += f"\n\nAdditional objective:\n{goal_override}"
+            agent.prompt_builder.update_instruction_prompt(instruction_prompt)
+        elif instruction_text is not None and self.config.eval.get("beliefs_in_system_prompt", False):
             if self.env_name == "minihack":
                 from balrog.environments.minihack import get_loaded_instruction_prompt
             else:
@@ -337,7 +375,13 @@ class Evaluator:
                         # apply perception module if loaded
                         long_term_text = obs["text"]["long_term_context"]
                         try:
-                            perception_output = perception_fn(long_term_text)
+                            raw_obs_history = [long_term_text]
+                            history_window = self.config.eval.get("evolve", {}).get(
+                                "perception_history_window", None
+                            )
+                            perception_output = _run_perception_fn(
+                                perception_fn, raw_obs_history, history_window
+                            )
                         except Exception as e:
                             perception_output = f"Perception code failed with error -\n{e}"
                             logging.warning(f"Perception module failed at initialization: {e}")
@@ -348,6 +392,11 @@ class Evaluator:
                 except Exception as e:
                     logging.error(f"Failed to load perception module: {e}")
                     perception_fn = None
+
+        raw_obs_history = [obs["text"]["long_term_context"]]
+        history_window = self.config.eval.get("evolve", {}).get(
+            "perception_history_window", None
+        )
 
         episode_return = 0.0
 
@@ -408,8 +457,11 @@ class Evaluator:
                 # Apply perception module if available
                 if perception_fn is not None:
                     long_term_text = obs["text"]["long_term_context"]
+                    raw_obs_history.append(long_term_text)
                     try:
-                        perception_output = perception_fn(long_term_text)
+                        perception_output = _run_perception_fn(
+                            perception_fn, raw_obs_history, history_window
+                        )
                     except Exception as e:
                         perception_output = f"Perception code failed with error -\n{e}"
                         logging.warning(f"Perception module failed at step {step}: {e}")

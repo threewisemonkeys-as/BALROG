@@ -13,8 +13,6 @@ You are an agent playing a game. The following are the possible actions you can 
 
 In a moment I will present a history of actions and observations from the game.
 
-Tips -
-
 { load }
 
 Goal: Your goal is to get as far as possible in the game.

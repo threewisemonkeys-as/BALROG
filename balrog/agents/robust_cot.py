@@ -52,15 +52,15 @@ World knowledge and strategy -
         messages[-1].content += "\n\n" + """
 First create (if not present) or update your plan from the previous steps and presented the updated plan in -
 <plan>
+<reasoning>
+thinking about what to do next and how to do it.
+</reasoning>
 <goal>
-high level subtask you are trying to achieve currently in order to accomplish the main task. update this as you complete subtasks or achieve goals.
+high level subtask you are trying to achieve currently. update this as you complete subtasks, achieve goals or are given new goals.
 </goal>
 <history>
 updated history with what happened. keep this numbered and summarise the past as you go along to keep the list short.
 </history>
-<reasoning>
-thinking about what to do next.
-</reasoning>
 <steps>
 updated next steps to achieve subtask and eventually the main task.
 </steps>

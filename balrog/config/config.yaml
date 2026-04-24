@@ -90,11 +90,11 @@ envs:
 tasks:
   arc_agi_tasks:
     - "ls20"                    # ARC-AGI 3 game IDs
-    - "sp80"
+    # - "sp80"
 
   autumn_tasks:
     - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
-    - "7WWW9"
+    # - "7WWW9"
 
   nle_tasks:
     - NetHackChallenge-v0       # Tasks for the NLE environment
@@ -263,12 +263,15 @@ eval:
     improve_interval: 1               # Run 3-track improve loop every N env steps
     experiment_interval: 1           # Generate new experiments every N env steps
     max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
+    max_images_context: 10            # Cap on attached prompt images for EB experiment formulation, QA extraction, and Track 1b perception updates
     perception_history_window: 5     # Cap on #raw obs passed to perceive(observation_history)
     perception_input_tail: 2          # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
     hide_obs_when_image: false        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
     question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
     mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
     include_policy: false
+    question_scoring_method: llm_trim      # stepwise_eb_learn: question trim strategy. llm_trim | b_diff_full | b_diff_light
+    question_scoring_max_concurrent: 8     # stepwise_eb_learn: semaphore cap for B-diff scoring fan-out
 
   # openhands baseline (openhands_stepwise.py): a coding agent driven by the
   # OpenHands SDK interacting per-step with the same set of envs used by the

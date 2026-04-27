@@ -89,6 +89,15 @@ def _mock_llm_response(model_id: str) -> "LLMResponse":
     )
 
 
+def _iter_attachments(message):
+    attachment = getattr(message, "attachment", None)
+    if attachment is None:
+        return []
+    if isinstance(attachment, (list, tuple)):
+        return [item for item in attachment if item is not None]
+    return [attachment]
+
+
 class LLMClientWrapper:
     """Base class for LLM client wrappers.
 
@@ -125,8 +134,13 @@ class LLMClientWrapper:
         for idx, msg in enumerate(messages):
             role = msg.role if hasattr(msg, 'role') else msg.get('role', 'unknown')
             content = msg.content if hasattr(msg, 'content') else msg.get('content', '')
-            has_attachment = (msg.attachment is not None) if hasattr(msg, 'attachment') else False
-            logger.info(f"--- Message {idx + 1}/{len(messages)} [{role}] {'(has image)' if has_attachment else ''} ---")
+            num_attachments = len(_iter_attachments(msg))
+            suffix = ""
+            if num_attachments == 1:
+                suffix = "(has image)"
+            elif num_attachments > 1:
+                suffix = f"(has {num_attachments} images)"
+            logger.info(f"--- Message {idx + 1}/{len(messages)} [{role}] {suffix} ---")
             logger.info(f"{content}")
         logger.info(f"{'='*80}")
         logger.info("END OF PROMPT")
@@ -260,8 +274,8 @@ class OpenAIWrapper(LLMClientWrapper):
         converted_messages = []
         for msg in messages:
             new_content = [{"type": "text", "text": msg.content}]
-            if msg.attachment is not None:
-                new_content.append(process_image_openai(msg.attachment))
+            for attachment in _iter_attachments(msg):
+                new_content.append(process_image_openai(attachment))
             if self.alternate_roles and converted_messages and converted_messages[-1]["role"] == msg.role:
                 converted_messages[-1]["content"].extend(new_content)
             else:
@@ -382,8 +396,8 @@ class GoogleGenerativeAIWrapper(LLMClientWrapper):
             if msg.content:
                 parts.append(types.Part(text=msg.content))
 
-            if msg.attachment is not None:
-                parts.append(types.Part(image=msg.attachment))
+            for attachment in _iter_attachments(msg):
+                parts.append(types.Part(image=attachment))
 
             converted_messages.append(
                 types.Content(role=role, parts=parts)
@@ -544,8 +558,8 @@ class ClaudeWrapper(LLMClientWrapper):
                 # Claude doesn't support system prompt and requires alternating roles
                 converted_messages[-1]["role"] = "user"
                 converted_messages.append({"role": "assistant", "content": "I'm ready!"})
-            if msg.attachment is not None:
-                converted_messages[-1]["content"].append(process_image_claude(msg.attachment))
+            for attachment in _iter_attachments(msg):
+                converted_messages[-1]["content"].append(process_image_claude(attachment))
 
         return converted_messages
 

@@ -41,6 +41,7 @@ Replace YOUR_CHOSEN_ACTION with the chosen action. Output no other text, explana
         if messages and messages[-1].role == "user":
             messages[-1].content += "\n\n" + naive_instruction
 
+        self.last_messages = messages
         response = self.client.generate(messages)
         final_answer = self._extract_final_answer(response)
         return final_answer

@@ -195,7 +195,7 @@ offline:
   resume_from: null
 
 eval:
-  output_dir: "logs/dev/apr20"
+  output_dir: "logs/dev/apr25"
   resume_from: null
   num_workers: 32
   num_episodes: 20
@@ -209,6 +209,8 @@ eval:
   perception_path: null
   instruction_prompt: null
   perception_prompt: null
+  agent_goal_mode: performance        # performance | dynamics
+  agent_goal_text: null               # Optional exact override; takes precedence over agent_goal_mode.
   beliefs_in_system_prompt: False
   mode: "eval"
 
@@ -269,10 +271,16 @@ eval:
     hide_obs_when_image: false        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
     question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
     mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
+    frozen_eval_after_learn: false     # If true, run frozen no-learning evaluation after EB exploration finishes for supported envs (minihack, arc_agi).
+    frozen_eval_envs: null             # null = evaluate the active env; or set a list such as ["minihack", "arc_agi"].
+    frozen_eval_max_steps: 501         # Max policy steps per frozen eval episode; env-specific max_episode_steps can still truncate earlier.
+    frozen_eval_minihack_goal: null    # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
+    frozen_eval_arc_agi_goal: null     # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
     autumn_eval_after_learn: false     # If true, run frozen AutumnBench test phases after EB exploration finishes.
     autumn_eval_task_types: ["mfp", "cd", "planning"]
     autumn_eval_max_steps: 501
     autumn_eval_render_mode: "text"    # Text is safest for MFP/CD/planning scoring; exploration can still use image mode.
+    frozen_eval_autumn_planning_goal: null # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
     include_policy: false
     question_scoring_method: llm_trim      # stepwise_eb_learn: question trim strategy. llm_trim | b_diff_full | b_diff_light
     question_scoring_max_concurrent: 8     # stepwise_eb_learn: semaphore cap for B-diff scoring fan-out
@@ -291,17 +299,25 @@ eval:
     max_output_tokens: null           # Null = use model default
     enable_browser_tools: false       # Forward to openhands.tools.preset.default.get_default_tools
     mock_mode: true                   # If true, skip the LLM entirely; pick a random valid action each step (smoke-test default)
+    log_llm_payloads: false           # If true, write final LiteLLM request payloads under <run>/openhands_llm_payloads
+    workspace_seed_dir: null          # Phase-2 EE: copy this dir into the run's workspace before starting (loads phase-1 artifacts)
+    workspace_checkpoint_interval: 0  # Phase-1 EE: snapshot the workspace every N global steps for intermediate-step eval (0 disables)
+    workspace_checkpoint_exclude_images: false  # If true, omit obs_images/ from workspace snapshots to bound disk use
 
   # simple baseline (simple_stepwise.py): a tool-less LLM agent. Mirrors the
   # openhands baseline's per-step loop but the LLM has no workspace and no
   # tools — it reads the current observation + valid actions and responds with
-  # its chosen action wrapped in <action>...</action> XML tags.
+  # its chosen action wrapped in <|ACTION|>...<|END|> tags.
   simple:
     n_environment_steps: 50           # Total env steps budget across all episodes
-    history_window: 50                # Max user turns retained in the rolling message history (system msg is always kept)
+    history_window: null              # Optional legacy override; null uses agent.max_text_history
+    max_image_history: null           # Optional legacy override; null uses agent.max_image_history
+    hide_obs_when_image: false        # If true and an image observation is available, suppress raw long-form obs text in simple-agent prompts
     model: "anthropic/claude-sonnet-4-5-20250929"  # LiteLLM model id
     api_key_env: "ANTHROPIC_API_KEY"  # Env var holding the API key
     base_url: null                    # Optional custom base URL (e.g., proxy)
     temperature: null                 # Null = use model default
     max_output_tokens: null           # Null = use model default
     mock_mode: true                   # If true, stub litellm.completion; synthesize a random valid <action>...</action> each step
+    dynamics_history_path: null       # Phase-2 EE: load this JSON message-history into the rolling history before episode 0 (seeds phase-1 context)
+    history_checkpoint_interval: 0    # Phase-1 EE: dump the rolling history every N global steps for intermediate-step eval (0 disables)

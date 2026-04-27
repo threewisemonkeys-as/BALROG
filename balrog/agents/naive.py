@@ -36,6 +36,7 @@ You always have to output one of the above actions at a time and no other text. 
         if messages and messages[-1].role == "user":
             messages[-1].content += "\n\n" + naive_instruction
 
+        self.last_messages = messages
         response = self.client.generate(messages)
 
         final_answer = self._extract_final_answer(response)

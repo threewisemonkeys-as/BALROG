@@ -47,14 +47,23 @@ class HistoryPromptBuilder:
         self._last_short_term_obs = obs["text"].get("short_term_context", "")
         text = long_term_context
 
-        image = obs.get("image", None)
+        raw_images = obs.get("images", None)
+        if raw_images:
+            images = [
+                item
+                for item in raw_images
+                if isinstance(item, dict) and item.get("image") is not None
+            ]
+        else:
+            image = obs.get("image", None)
+            images = [{"label": "Image observation", "image": image}] if image is not None else []
 
         # Add observation to events
         self._events.append(
             {
                 "type": "observation",
                 "text": text,
-                "image": image,
+                "images": images,
             }
         )
 
@@ -97,15 +106,21 @@ class HistoryPromptBuilder:
                 else:
                     event["include_text"] = False
 
-        # Determine which image observations to include
-        images_needed = self.max_image_history
+        # Determine which image observations to include. Counts observation
+        # events with images, mirroring max_text_history semantics; events with
+        # multiple images (e.g. AutumnBench planning's current+goal) consume
+        # one slot, not one per image.
+        events_needed = self.max_image_history
         for event in reversed(self._events):
             if event["type"] == "observation":
-                if images_needed > 0 and event.get("image") is not None:
+                images = event.get("images") or []
+                if events_needed > 0 and images:
                     event["include_image"] = True
-                    images_needed -= 1
+                    event["included_images"] = images
+                    events_needed -= 1
                 else:
                     event["include_image"] = False
+                    event["included_images"] = []
 
         # determine the reasoning to include
         reasoning_needed = self.max_cot_history
@@ -131,16 +146,24 @@ class HistoryPromptBuilder:
                 if event.get("include_text", False):
                     message_parts.append(event["text"])
                     
-                image = None
+                attachments = []
                 if event.get("include_image", False):
-                    image = event["image"]
-                    message_parts.append("Image observation provided.")
+                    included_images = event.get("included_images", [])
+                    attachments = [item["image"] for item in included_images]
+                    labels = [item.get("label", "Image observation") for item in included_images]
+                    if len(labels) == 1:
+                        message_parts.append(f"{labels[0]} image provided.")
+                    elif labels:
+                        message_parts.append(
+                            "Images provided: " + ", ".join(f"{label}" for label in labels) + "."
+                        )
 
                 content = "\n".join(message_parts)
-                message = Message(role="user", content=content, attachment=image)
+                attachment = attachments if len(attachments) > 1 else (attachments[0] if attachments else None)
+                message = Message(role="user", content=content, attachment=attachment)
 
                 # Clean up temporary flags
-                for flag in ["include_text", "include_image"]:
+                for flag in ["include_text", "include_image", "included_images"]:
                     if flag in event:
                         del event[flag]
             elif event["type"] == "action":

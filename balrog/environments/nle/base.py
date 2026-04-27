@@ -89,7 +89,9 @@ class NLELanguageWrapper(language_wrapper.NLELanguageWrapper):
         obs, reward, done, info = super().step(action)
         self.done = done if not self.done else self.done
         self.progress.update(obs["obs"], reward, self.done, info)
-        return obs, reward, self.done, info
+        step_info = dict(info)
+        step_info.update(self.progress.__dict__)
+        return obs, reward, self.done, step_info
 
     def post_reset(self, obsv):
         return self.post_step(obsv)

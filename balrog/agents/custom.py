@@ -40,6 +40,7 @@ ACTION: <your next action>
         if messages and messages[-1].role == "user":
             messages[-1].content += "\n\n" + plan_text + "\n" + planning_instructions
 
+        self.last_messages = messages
         response = self.client.generate(messages)
 
         # Extract the plan and action from the LLM's response

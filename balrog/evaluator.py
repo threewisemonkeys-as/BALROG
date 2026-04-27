@@ -19,6 +19,7 @@ from balrog.agents.few_shot import FewShotAgent
 from balrog.dataset import InContextDataset
 from balrog.environments import make_env
 from balrog.utils import get_unique_seed
+from goal_prompts import append_agent_goal, resolve_agent_goal
 
 
 logger = logging.getLogger(__name__)
@@ -303,44 +304,17 @@ class Evaluator:
         }
 
         goal_override = self.config.eval.get("goal_override", None)
+        agent_goal = goal_override or resolve_agent_goal(self.config)
+        episode_log["agent_goal"] = agent_goal
         instruction_text = self.config.eval.get("instruction_prompt", None)
-        if self.env_name == "autumn":
-            instruction_prompt = env.get_instruction_prompt(instructions=None)
-            if instruction_text:
-                instruction_prompt += f"\n\n{instruction_text}"
-            if goal_override:
-                instruction_prompt += f"\n\nAdditional objective:\n{goal_override}"
-            agent.prompt_builder.update_instruction_prompt(instruction_prompt)
-        elif instruction_text is not None and self.config.eval.get("beliefs_in_system_prompt", False):
-            if self.env_name == "minihack":
-                from balrog.environments.minihack import get_loaded_instruction_prompt
-            else:
-                from balrog.environments.nle import get_loaded_instruction_prompt
-            instruction_prompt = get_loaded_instruction_prompt(
-                env=env,
-                load=instruction_text,
-                task=task,
-                goal_override=goal_override,
-            )
-            agent.prompt_builder.update_instruction_prompt(instruction_prompt)
-        elif goal_override:
-            # No custom beliefs but we have a goal override (e.g. experiments)
-            if self.env_name == "minihack":
-                from balrog.environments.minihack import get_loaded_instruction_prompt
-            else:
-                from balrog.environments.nle import get_loaded_instruction_prompt
-            instruction_prompt = get_loaded_instruction_prompt(
-                env=env,
-                load=instruction_text or "",
-                task=task,
-                goal_override=goal_override,
-            )
-            agent.prompt_builder.update_instruction_prompt(instruction_prompt)
-        else:
-            instructions = None
-            if self.env_name == "babyai":
-                instructions = obs["mission"]
-            agent.prompt_builder.update_instruction_prompt(env.get_instruction_prompt(instructions=instructions))
+        instructions = None
+        if self.env_name == "babyai":
+            instructions = obs["mission"]
+        instruction_prompt = env.get_instruction_prompt(instructions=instructions)
+        instruction_prompt = append_agent_goal(instruction_prompt, agent_goal)
+        if instruction_text:
+            instruction_prompt += f"\n\n{instruction_text}"
+        agent.prompt_builder.update_instruction_prompt(instruction_prompt)
 
         # Load perception module if provided
         perception_fn = None

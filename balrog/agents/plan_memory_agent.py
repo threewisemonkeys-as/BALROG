@@ -74,6 +74,7 @@ Keep the plan and thinking very brief.
 
         messages[-1].content += "\n\n" + instruction
 
+        self.last_messages = messages
         # Generate the CoT reasoning
         cot_reasoning = self.client.generate(messages)
 

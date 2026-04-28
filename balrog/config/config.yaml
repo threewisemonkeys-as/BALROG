@@ -41,7 +41,8 @@ envs:
     include_perc_obs: False     # Whether to include perceptual features from perc.py in the observation
     use_textual_desc: False
   minihack_kwargs:
-    seeds: [6, 14, 17, 18]
+    seeds: [6]
+    # seeds: [6, 14, 17, 18]
     character: "@"
     max_episode_steps: 100
     penalty_step: -0.01
@@ -259,6 +260,7 @@ eval:
     max_total_qa_pairs: 50            # Cap on total accumulated QA pairs
     max_answered_qa_pairs: 40         # Stepwise EB: cap on answered QA pairs
     max_unanswered_qa_pairs: 10       # Stepwise EB: cap on unanswered QA pairs
+    trim_unanswered_at_selection: false # Stepwise EB: if true, discard unanswered questions not selected for the experiment prompt
     # num_experiments: 5              # (shared with explore above)
     num_sample_obs: 3                 # Sampled observations for perception validation
     # explore_temp: 1.0               # (shared with explore above)

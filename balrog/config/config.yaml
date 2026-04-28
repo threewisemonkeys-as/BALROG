@@ -41,6 +41,7 @@ envs:
     include_perc_obs: False     # Whether to include perceptual features from perc.py in the observation
     use_textual_desc: False
   minihack_kwargs:
+    seeds: [6, 14, 17, 18]
     character: "@"
     max_episode_steps: 100
     penalty_step: -0.01
@@ -246,7 +247,7 @@ eval:
     n_environment_steps: 50         # Total env steps budget across all episodes
     max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
     max_perception_iterations:
-      - [0, 5]
+      - [0, 10]
     use_qa_improve: true              # Enable track 2 (QA-based improvement)
     use_moments_improve: false         # Enable track 3 (critical moment improvement)
     # max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
@@ -264,7 +265,7 @@ eval:
     artifact_update_interval: 1       # Extract Q&A/moments every N env steps
     improve_interval: 1               # Run 3-track improve loop every N env steps
     experiment_interval: 1           # Generate new experiments every N env steps
-    max_steps_context_chars: 50000    # Max chars of step sequence for improvement prompts
+    max_steps_context_chars: 10000    # Max chars of step sequence for improvement prompts
     max_images_context: 10            # Cap on attached prompt images for EB experiment formulation, QA extraction, and Track 1b perception updates
     perception_history_window: 5     # Cap on #raw obs passed to perceive(observation_history)
     perception_input_tail: 2          # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
@@ -284,6 +285,8 @@ eval:
     include_policy: false
     question_scoring_method: llm_trim      # stepwise_eb_learn: question trim strategy. llm_trim | b_diff_full | b_diff_light
     question_scoring_max_concurrent: 8     # stepwise_eb_learn: semaphore cap for B-diff scoring fan-out
+    critical_transitions_enabled: false    # If true, gate improve+artifact-update (this step) and experiment-gen (next step) on a per-step LLM critical-transition decision. When false, behavior matches the fixed-interval baseline.
+    critical_id_min_for_perception: 3      # Min #critical transitions in buffer before Track 1b uses them as the sole sample source; otherwise pads with _sample_observations_from_buffer.
 
   # openhands baseline (openhands_stepwise.py): a coding agent driven by the
   # OpenHands SDK interacting per-step with the same set of envs used by the
@@ -319,5 +322,5 @@ eval:
     temperature: null                 # Null = use model default
     max_output_tokens: null           # Null = use model default
     mock_mode: true                   # If true, stub litellm.completion; synthesize a random valid <action>...</action> each step
-    dynamics_history_path: null       # Phase-2 EE: load this JSON message-history into the rolling history before episode 0 (seeds phase-1 context)
+    dynamics_history_path: null       # Phase-2 EE: load this JSON message-history into the rolling history before episode 0 (hack_argseeds phase-1 context)
     history_checkpoint_interval: 0    # Phase-1 EE: dump the rolling history every N global steps for intermediate-step eval (0 disables)

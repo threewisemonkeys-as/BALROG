@@ -1,329 +1,329 @@
-agent: 
-  type: robust_cot       # Type of agent to use (e.g., 'naive', 'cot', etc.)
-  remember_cot: True     # Whether the agent should remember its reasoning across turns
-  max_text_history: 4   # Maximum number of text messages to keep in the history
-  max_image_history: 4   # Maximum number of images to keep in the history
-  max_cot_history: 4    # Maximum number of chain-of-thought steps to keep in history (if using 'cot' type of agent)
-  max_icl_history: 1000   # Maximum number of ICL steps to keep in history (if using 'few_shot' type of agent)
-  cache_icl: False
+agent:
+    type: robust_cot # Type of agent to use (e.g., 'naive', 'cot', etc.)
+    remember_cot: True # Whether the agent should remember its reasoning across turns
+    max_text_history: 4 # Maximum number of text messages to keep in the history
+    max_image_history: 4 # Maximum number of images to keep in the history
+    max_cot_history: 4 # Maximum number of chain-of-thought steps to keep in history (if using 'cot' type of agent)
+    max_icl_history: 1000 # Maximum number of ICL steps to keep in history (if using 'few_shot' type of agent)
+    cache_icl: False
 
 client:
-  client_name: openrouter           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
-  model_id: google/gemini-2.5-flash              # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
-  # model_id: anthropic/claude-sonnet-4.6
-  # client_name: deepseek           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
-  # model_id: deepseek-chat
-  base_url: http://localhost:8080/v1   # Base URL for the API (if using a local server)
-  generate_kwargs:
-    temperature: 0.0            # Sampling temperature. If null the API default temperature is used instead
-    max_tokens: 4096            # Max tokens to generate in the response
-  thinking_budget: null         # Thinking budget. Set to a number of tokens to control.
-  timeout: 60                   # Timeout for API requests in seconds
-  max_retries: 5                # Max number of retries for failed API calls
-  delay: 2                      # Exponential backoff factor between retries in seconds
-  alternate_roles: False        # Whether the client requires alternating between the agent and the environment
+    client_name: openrouter # LLM client to use (e.g., 'openai', 'gemini', 'claude')
+    model_id: google/gemini-2.5-flash # Model identifier (e.g., 'gpt-4', 'gpt-3.5-turbo')
+    # model_id: anthropic/claude-sonnet-4.6
+    # client_name: deepseek           # LLM client to use (e.g., 'openai', 'gemini', 'claude')
+    # model_id: deepseek-chat
+    base_url: http://localhost:8080/v1 # Base URL for the API (if using a local server)
+    generate_kwargs:
+        temperature: 1.0 # Sampling temperature. If null the API default temperature is used instead
+        max_tokens: 4096 # Max tokens to generate in the response
+    thinking_budget: null # Thinking budget. Set to a number of tokens to control.
+    timeout: 60 # Timeout for API requests in seconds
+    max_retries: 5 # Max number of retries for failed API calls
+    delay: 2 # Exponential backoff factor between retries in seconds
+    alternate_roles: False # Whether the client requires alternating between the agent and the environment
 
 envs:
-  # names: minihack   # Environments to evaluate, separated by hyphens
-  # names: nle
-  # names: arc_agi 
-  names: autumn  
-  env_kwargs:
-    seed: null                # Random seed; null means a random seed is used
-  nle_kwargs:
-    character: "@"            # Character representing the agent in NLE
-    max_episode_steps: 500  # Max steps per episode in NLE
-    no_progress_timeout: 150    # Timeout for no progress in NLE
-    savedir: null               # Directory to save NLE data; null disables saving
-    save_ttyrec_every: 0        # Frequency of saving TTY recordings
-    skip_more: True            # Whether to skip the 'more' prompt in NLE
-    include_lang_obs: False     # Whether to include language observations in the observation
-    include_perc_obs: False     # Whether to include perceptual features from perc.py in the observation
-    use_textual_desc: False
-  minihack_kwargs:
-    # seeds: null
-    seeds: [6]
-    # seeds: [6, 14, 17, 18]
-    character: "@"
-    max_episode_steps: 100
-    penalty_step: -0.01
-    penalty_time: 0.0
-    penalty_mode: constant
-    savedir: null
-    save_ttyrec_every: 0
-    # autopickup: False
-    skip_more: True
-    include_lang_obs: False
-    include_perc_obs: False     # Whether to include perceptual features from perc.py in the observation
-    use_textual_desc: False
-  babyai_kwargs:
-    num_dists: 0                
-  crafter_kwargs:
-    area: [64, 64]              
-    view: [9, 9]                
-    size: [256, 256]            # Image size in Crafter
-    reward: True                            
-    seed: null                  
-    max_episode_steps: 2000
-    unique_items: True # False
-    precise_location: False # True
-    skip_items: [] # ["grass", "sand", "path"]
-    edge_only_items: [] # ["water", "lava"]
-  textworld_kwargs:
-    objective: True             
-    description: True           
-    score: True                 
-    max_score: True             
-    won: True                   
-    max_episode_steps: 80       
-    textworld_games_path: tw_games  
-  babaisai_kwargs:
-    add_ruleset: True
-  arc_agi_kwargs:
-    max_episode_steps: 250
-  autumn_kwargs:
-    task_type: "interactive"    # "interactive" | "cd" (MFP/planning: todo)
-    max_episode_steps: 300
-    stack_frames: false
-    skip_frames: false
-    render_mode: "image"        # "text" = text only; "image" = text + image (dual)
-    # data_dir: null            # default: MARAProtocol/.../example_benchmark
-    logging_path: "./logs/autumn"
+    # names: minihack   # Environments to evaluate, separated by hyphens
+    # names: nle
+    # names: arc_agi
+    names: autumn
+    env_kwargs:
+        seed: null # Random seed; null means a random seed is used
+    nle_kwargs:
+        character: "@" # Character representing the agent in NLE
+        max_episode_steps: 500 # Max steps per episode in NLE
+        no_progress_timeout: 150 # Timeout for no progress in NLE
+        savedir: null # Directory to save NLE data; null disables saving
+        save_ttyrec_every: 0 # Frequency of saving TTY recordings
+        skip_more: True # Whether to skip the 'more' prompt in NLE
+        include_lang_obs: False # Whether to include language observations in the observation
+        include_perc_obs: False # Whether to include perceptual features from perc.py in the observation
+        use_textual_desc: False
+    minihack_kwargs:
+        # seeds: null
+        seeds: [6]
+        # seeds: [6, 14, 17, 18]
+        character: "@"
+        max_episode_steps: 100
+        penalty_step: -0.01
+        penalty_time: 0.0
+        penalty_mode: constant
+        savedir: null
+        save_ttyrec_every: 0
+        # autopickup: False
+        skip_more: True
+        include_lang_obs: False
+        include_perc_obs: False # Whether to include perceptual features from perc.py in the observation
+        use_textual_desc: False
+    babyai_kwargs:
+        num_dists: 0
+    crafter_kwargs:
+        area: [64, 64]
+        view: [9, 9]
+        size: [256, 256] # Image size in Crafter
+        reward: True
+        seed: null
+        max_episode_steps: 2000
+        unique_items: True # False
+        precise_location: False # True
+        skip_items: [] # ["grass", "sand", "path"]
+        edge_only_items: [] # ["water", "lava"]
+    textworld_kwargs:
+        objective: True
+        description: True
+        score: True
+        max_score: True
+        won: True
+        max_episode_steps: 80
+        textworld_games_path: tw_games
+    babaisai_kwargs:
+        add_ruleset: True
+    arc_agi_kwargs:
+        max_episode_steps: 250
+    autumn_kwargs:
+        task_type: "interactive" # "interactive" | "cd" (MFP/planning: todo)
+        max_episode_steps: 300
+        stack_frames: false
+        skip_frames: false
+        render_mode: "image" # "text" = text only; "image" = text + image (dual)
+        # data_dir: null            # default: MARAProtocol/.../example_benchmark
+        logging_path: "./logs/autumn"
 
 tasks:
-  arc_agi_tasks:
-    - "ls20"                    # ARC-AGI 3 game IDs
-    # - "sp80"
+    arc_agi_tasks:
+        - "ls20" # ARC-AGI 3 game IDs
+        # - "sp80"
 
-  autumn_tasks:
-    - "ice"                     # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
-    # - "7WWW9"
+    autumn_tasks:
+        - "ice" # AutumnBench program id (see MARAProtocol/python_examples/autumnbench/example_benchmark/programs/)
+        # - "7WWW9"
 
-  nle_tasks:
-    - NetHackChallenge-v0       # Tasks for the NLE environment
+    nle_tasks:
+        - NetHackChallenge-v0 # Tasks for the NLE environment
 
-  minihack_tasks:
-    # - "MiniHack-Boxoban-Hard-v0"
-    # - "MiniHack-Boxoban-Medium-v0"
-    # - "MiniHack-MazeWalk-9x9-v0"
-    # - "MiniHack-MazeWalk-15x15-v0"
-    # - "MiniHack-Corridor-R3-v0"
-    # - "MiniHack-CorridorBattle-Dark-v0"
-    - "MiniHack-Quest-Easy-v0"
-    # - "MiniHack-Quest-Medium-v0"
-    # - "MiniHack-Eat-v0"
-    # - "MiniHack-Eat-Distr-v0"
-    # - "MiniHack-Pray-v0"
-    # - "MiniHack-Pray-Distr-v0"
-    # - "MiniHack-LavaCross-Full-v0"
-    # - "MiniHack-Wear-v0"
-    # - "MiniHack-Wear-Distr-v0"
-    # - "MiniHack-LockedDoor-v0"
+    minihack_tasks:
+        # - "MiniHack-Boxoban-Hard-v0"
+        # - "MiniHack-Boxoban-Medium-v0"
+        # - "MiniHack-MazeWalk-9x9-v0"
+        # - "MiniHack-MazeWalk-15x15-v0"
+        # - "MiniHack-Corridor-R3-v0"
+        # - "MiniHack-CorridorBattle-Dark-v0"
+        - "MiniHack-Quest-Easy-v0"
+        # - "MiniHack-Quest-Medium-v0"
+        # - "MiniHack-Eat-v0"
+        # - "MiniHack-Eat-Distr-v0"
+        # - "MiniHack-Pray-v0"
+        # - "MiniHack-Pray-Distr-v0"
+        # - "MiniHack-LavaCross-Full-v0"
+        # - "MiniHack-Wear-v0"
+        # - "MiniHack-Wear-Distr-v0"
+        # - "MiniHack-LockedDoor-v0"
 
-  # crafter_tasks:
-  #   - "default"                 # Tasks for Crafter
+    # crafter_tasks:
+    #   - "default"                 # Tasks for Crafter
 
-  # babyai_tasks:
-  #   - "BabyAI-MixedTrainLocal-v0/goto"
-  #   - "BabyAI-MixedTrainLocal-v0/pickup"
-  #   - "BabyAI-MixedTrainLocal-v0/open"
-  #   - "BabyAI-MixedTrainLocal-v0/putnext"
-  #   - "BabyAI-MixedTrainLocal-v0/pick_up_seq_go_to"
+    # babyai_tasks:
+    #   - "BabyAI-MixedTrainLocal-v0/goto"
+    #   - "BabyAI-MixedTrainLocal-v0/pickup"
+    #   - "BabyAI-MixedTrainLocal-v0/open"
+    #   - "BabyAI-MixedTrainLocal-v0/putnext"
+    #   - "BabyAI-MixedTrainLocal-v0/pick_up_seq_go_to"
 
-  # textworld_tasks:
-  #   - "treasure_hunter"
-  #   - "the_cooking_game"
-  #   - "coin_collector"
+    # textworld_tasks:
+    #   - "treasure_hunter"
+    #   - "the_cooking_game"
+    #   - "coin_collector"
 
-  # babaisai_tasks:
-  #   - "env/make_win-distr_obj_rule"
-  #   - "env/goto_win-distr_obj_rule"
-  #   - "env/goto_win"
-  #   - "env/goto_win-distr_obj"
-  #   - "env/goto_win-distr_rule"
-  #   - "env/goto_win-distr_obj-irrelevant_rule"
-  #   - "env/make_win-distr_obj"
-  #   - "env/make_win-distr_rule"
-  #   - "env/make_win"
-  #   - "env/make_win-distr_obj-irrelevant_rule"
-  #   - "env/two_room-goto_win"
-  #   - "env/two_room-goto_win-distr_obj_rule"
-  #   - "env/two_room-goto_win-distr_rule"
-  #   - "env/two_room-goto_win-distr_obj"
-  #   - "env/two_room-goto_win-distr_obj-irrelevant_rule"
-  #   - "env/two_room-goto_win-distr_win_rule"
-  #   - "env/two_room-break_stop-goto_win-distr_obj_rule"
-  #   - "env/two_room-break_stop-goto_win-distr_obj"
-  #   - "env/two_room-break_stop-goto_win-distr_rule"
-  #   - "env/two_room-break_stop-goto_win-distr_obj-irrelevant_rule"
-  #   - "env/two_room-break_stop-goto_win"
-  #   - "env/two_room-maybe_break_stop-goto_win-distr_obj_rule"
-  #   - "env/two_room-maybe_break_stop-goto_win"
-  #   - "env/two_room-maybe_break_stop-goto_win-distr_obj"
-  #   - "env/two_room-maybe_break_stop-goto_win-distr_rule"
-  #   - "env/two_room-maybe_break_stop-goto_win-distr_obj-irrelevant_rule"
-  #   - "env/two_room-make_win-distr_obj_rule"
-  #   - "env/two_room-make_win-distr_rule"
-  #   - "env/two_room-make_win"
-  #   - "env/two_room-make_win-distr_obj-irrelevant_rule"
-  #   - "env/two_room-make_win-distr_obj"
-  #   - "env/two_room-make_win-distr_win_rule"
-  #   - "env/two_room-break_stop-make_win-distr_obj_rule"
-  #   - "env/two_room-break_stop-make_win-distr_rule"
-  #   - "env/two_room-break_stop-make_win"
-  #   - "env/two_room-break_stop-make_win-distr_obj-irrelevant_rule"
-  #   - "env/two_room-break_stop-make_win-distr_obj"
-  #   - "env/two_room-make_you"
-  #   - "env/two_room-make_you-make_win"
-  #   - "env/two_room-make_wall_win"
+    # babaisai_tasks:
+    #   - "env/make_win-distr_obj_rule"
+    #   - "env/goto_win-distr_obj_rule"
+    #   - "env/goto_win"
+    #   - "env/goto_win-distr_obj"
+    #   - "env/goto_win-distr_rule"
+    #   - "env/goto_win-distr_obj-irrelevant_rule"
+    #   - "env/make_win-distr_obj"
+    #   - "env/make_win-distr_rule"
+    #   - "env/make_win"
+    #   - "env/make_win-distr_obj-irrelevant_rule"
+    #   - "env/two_room-goto_win"
+    #   - "env/two_room-goto_win-distr_obj_rule"
+    #   - "env/two_room-goto_win-distr_rule"
+    #   - "env/two_room-goto_win-distr_obj"
+    #   - "env/two_room-goto_win-distr_obj-irrelevant_rule"
+    #   - "env/two_room-goto_win-distr_win_rule"
+    #   - "env/two_room-break_stop-goto_win-distr_obj_rule"
+    #   - "env/two_room-break_stop-goto_win-distr_obj"
+    #   - "env/two_room-break_stop-goto_win-distr_rule"
+    #   - "env/two_room-break_stop-goto_win-distr_obj-irrelevant_rule"
+    #   - "env/two_room-break_stop-goto_win"
+    #   - "env/two_room-maybe_break_stop-goto_win-distr_obj_rule"
+    #   - "env/two_room-maybe_break_stop-goto_win"
+    #   - "env/two_room-maybe_break_stop-goto_win-distr_obj"
+    #   - "env/two_room-maybe_break_stop-goto_win-distr_rule"
+    #   - "env/two_room-maybe_break_stop-goto_win-distr_obj-irrelevant_rule"
+    #   - "env/two_room-make_win-distr_obj_rule"
+    #   - "env/two_room-make_win-distr_rule"
+    #   - "env/two_room-make_win"
+    #   - "env/two_room-make_win-distr_obj-irrelevant_rule"
+    #   - "env/two_room-make_win-distr_obj"
+    #   - "env/two_room-make_win-distr_win_rule"
+    #   - "env/two_room-break_stop-make_win-distr_obj_rule"
+    #   - "env/two_room-break_stop-make_win-distr_rule"
+    #   - "env/two_room-break_stop-make_win"
+    #   - "env/two_room-break_stop-make_win-distr_obj-irrelevant_rule"
+    #   - "env/two_room-break_stop-make_win-distr_obj"
+    #   - "env/two_room-make_you"
+    #   - "env/two_room-make_you-make_win"
+    #   - "env/two_room-make_wall_win"
 
 hydra:
-  run:
-    dir: .                     # Set the working directory to the current directory
-  output_subdir: null          # Do not use an output subdirectory
-  job_logging:
-    root:
-      handlers: [console]      # Disable Hydra's default file handler (main() sets up its own)
+    run:
+        dir: . # Set the working directory to the current directory
+    output_subdir: null # Do not use an output subdirectory
+    job_logging:
+        root:
+            handlers: [console] # Disable Hydra's default file handler (main() sets up its own)
 
 offline:
-  mode: "knowledge"          # "knowledge" | "both" | "policy"
-  trajectories_dir: null     # Path to CSV+JSON trajectory files
-  initial_beliefs_path: null # Starting beliefs file (world_knowledge + optional policy)
-  world_knowledge_path: null # For "policy" mode
-  objective: ""              # For "policy" mode
-  num_steps: 10
-  batch_size: 10              # Trajectories per batch (knowledge/both)
-  num_refinements: 1         # LLM refinement passes per step (each feeds into the next)
-  output_dir: "logs/offline"
-  resume_from: null
+    mode: "knowledge" # "knowledge" | "both" | "policy"
+    trajectories_dir: null # Path to CSV+JSON trajectory files
+    initial_beliefs_path: null # Starting beliefs file (world_knowledge + optional policy)
+    world_knowledge_path: null # For "policy" mode
+    objective: "" # For "policy" mode
+    num_steps: 10
+    batch_size: 10 # Trajectories per batch (knowledge/both)
+    num_refinements: 1 # LLM refinement passes per step (each feeds into the next)
+    output_dir: "logs/offline"
+    resume_from: null
 
 eval:
-  output_dir: "logs/dev/apr25"
-  resume_from: null
-  num_workers: 32
-  num_episodes: 20
-  max_steps_per_episode: null
-  save_trajectories: True
-  save_images: False
-  icl_episodes: 1
-  icl_dataset: records
-  feedback_on_invalid_action : True
-  beliefs_path: null
-  perception_path: null
-  instruction_prompt: null
-  perception_prompt: null
-  agent_goal_mode: performance        # performance | dynamics
-  agent_goal_text: null               # Optional exact override; takes precedence over agent_goal_mode.
-  beliefs_in_system_prompt: False
-  mode: "eval"
+    output_dir: "logs/dev/apr25"
+    resume_from: null
+    num_workers: 32
+    num_episodes: 20
+    max_steps_per_episode: null
+    save_trajectories: True
+    save_images: False
+    icl_episodes: 1
+    icl_dataset: records
+    feedback_on_invalid_action: True
+    beliefs_path: null
+    perception_path: null
+    instruction_prompt: null
+    perception_prompt: null
+    agent_goal_mode: performance # performance | dynamics
+    agent_goal_text: null # Optional exact override; takes precedence over agent_goal_mode.
+    beliefs_in_system_prompt: False
+    mode: "eval"
 
-  evolve:
-    num_steps: 5
-    num_experiments: 10
-    rollouts_per_step: 1
-    num_baseline_rollouts: 1
-    improve_mode: "both"
-    two_step: true
-    include_experiment_summary: false
-    perc_example_max_trajs: 1    # Number of trajectories to sample perception examples from
-    perc_example_max_steps: 3    # Number of steps to sample per trajectory
-    beliefs_style: "relaxed"
-    experiment_mode: "free"
-    explore_temp: 1.0            # Temperature for meta/learning LLM calls (improve, QA gen/answer, experiment gen, B-diff scoring) in stepwise_eb_learn. The BALROG agent uses client.generate_kwargs.temperature. stepwise_b_learn still applies this to both via override_temperature.
-    num_trajectories: 1          # Number of trajectories per b_learn step
-    num_improve_iterations: 5
-    experiments_per_rollout: 1
+    evolve:
+        num_steps: 5
+        num_experiments: 10
+        rollouts_per_step: 1
+        num_baseline_rollouts: 1
+        improve_mode: "both"
+        two_step: true
+        include_experiment_summary: false
+        perc_example_max_trajs: 1 # Number of trajectories to sample perception examples from
+        perc_example_max_steps: 3 # Number of steps to sample per trajectory
+        beliefs_style: "relaxed"
+        experiment_mode: "free"
+        explore_temp: 1.0 # Temperature for meta/learning LLM calls (improve, QA gen/answer, experiment gen, B-diff scoring) in stepwise_eb_learn. The BALROG agent uses client.generate_kwargs.temperature. stepwise_b_learn still applies this to both via override_temperature.
+        num_trajectories: 1 # Number of trajectories per b_learn step
+        num_improve_iterations: 5
+        experiments_per_rollout: 1
 
-    # Mixed explore settings
-    mixed_explore: false              # Boolean flag to enable mixed_explore.py mode
-    num_initial_trajectories: 3       # Baseline rollouts in step 0
-    num_trajectories_per_iteration: 3 # Rollouts per step
-    num_belief_improvement: 5         # Inner scoring/improvement iterations
-    use_qa_pairs: true                # Toggle Q&A pair extraction and scoring
-    use_moments: true                 # Toggle critical moment extraction and scoring
-    use_raw_observations: true        # Use full raw observations (+ perception) in moment scoring/improvement
-    num_perception_improvement: 5     # Inner perception improvement iterations (each sees different examples)
-    num_perception_candidates: 3     # Number of parallel perception candidates to evolve (best is selected after all iterations)
+        # Mixed explore settings
+        mixed_explore: false # Boolean flag to enable mixed_explore.py mode
+        num_initial_trajectories: 3 # Baseline rollouts in step 0
+        num_trajectories_per_iteration: 3 # Rollouts per step
+        num_belief_improvement: 5 # Inner scoring/improvement iterations
+        use_qa_pairs: true # Toggle Q&A pair extraction and scoring
+        use_moments: true # Toggle critical moment extraction and scoring
+        use_raw_observations: true # Use full raw observations (+ perception) in moment scoring/improvement
+        num_perception_improvement: 5 # Inner perception improvement iterations (each sees different examples)
+        num_perception_candidates: 3 # Number of parallel perception candidates to evolve (best is selected after all iterations)
 
-    # Stepwise B-learn settings (stepwise_b_learn.py)
-    n_environment_steps: 50         # Total env steps budget across all episodes
-    max_steps_iterations: 1           # Max improvement turns for track 1b (steps-based beliefs)
-    max_perception_iterations:
-      - [0, 10]
-    use_qa_improve: true              # Enable track 2 (QA-based improvement)
-    use_moments_improve: false         # Enable track 3 (critical moment improvement)
-    # max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
-    max_moments_iterations: 1         # Max improvement turns for track 3 (critical moments)
-    conversational_improve: true      # true = multi-turn conversations per track; false = independent LLM calls (legacy)
-    max_moments_per_forward: 20       # Batch size for moment forward pass
-    max_qa_per_forward: 20            # Batch size for QA forward pass
-    max_total_moments: 20             # Cap on total accumulated critical moments
-    max_total_qa_pairs: 50            # Cap on total accumulated QA pairs
-    max_answered_qa_pairs: 40         # Stepwise EB: cap on answered QA pairs
-    max_unanswered_qa_pairs: 10       # Stepwise EB: cap on unanswered QA pairs
-    trim_unanswered_at_selection: false # Stepwise EB: if true, discard unanswered questions not selected for the experiment prompt
-    # num_experiments: 5              # (shared with explore above)
-    num_sample_obs: 3                 # Sampled observations for perception validation
-    # explore_temp: 1.0               # (shared with explore above)
-    artifact_update_interval: 1       # Extract Q&A/moments every N env steps
-    improve_interval: 1               # Run 3-track improve loop every N env steps
-    experiment_interval: 1           # Generate new experiments every N env steps
-    max_steps_context_chars: 10000    # Max chars of step sequence for improvement prompts
-    max_images_context: 10            # Cap on attached prompt images for EB experiment formulation, QA extraction, and Track 1b perception updates
-    perception_history_window: 5     # Cap on #raw obs passed to perceive(observation_history)
-    perception_input_tail: 2          # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
-    hide_obs_when_image: false        # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
-    question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
-    mock_mode: false                  # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
-    frozen_eval_after_learn: false     # If true, run frozen no-learning evaluation after EB exploration finishes for supported envs (minihack, arc_agi).
-    frozen_eval_envs: null             # null = evaluate the active env; or set a list such as ["minihack", "arc_agi"].
-    frozen_eval_max_steps: 501         # Max policy steps per frozen eval episode; env-specific max_episode_steps can still truncate earlier.
-    frozen_eval_minihack_goal: null    # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
-    frozen_eval_arc_agi_goal: null     # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
-    autumn_eval_after_learn: false     # If true, run frozen AutumnBench test phases after EB exploration finishes.
-    autumn_eval_task_types: ["mfp", "cd", "planning"]
-    autumn_eval_max_steps: 501
-    autumn_eval_render_mode: "text"    # Text is safest for MFP/CD/planning scoring; exploration can still use image mode.
-    frozen_eval_autumn_planning_goal: null # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
-    include_policy: false
-    question_scoring_method: llm_trim      # stepwise_eb_learn: question trim strategy. llm_trim | b_diff_full | b_diff_light
-    question_scoring_max_concurrent: 8     # stepwise_eb_learn: semaphore cap for B-diff scoring fan-out
-    critical_transitions_enabled: false    # If true, gate improve+artifact-update (this step) and experiment-gen (next step) on a per-step LLM critical-transition decision. When false, behavior matches the fixed-interval baseline.
-    critical_id_min_for_perception: 3      # Min #critical transitions in buffer before Track 1b uses them as the sole sample source; otherwise pads with _sample_observations_from_buffer.
+        # Stepwise B-learn settings (stepwise_b_learn.py)
+        n_environment_steps: 50 # Total env steps budget across all episodes
+        max_steps_iterations: 1 # Max improvement turns for track 1b (steps-based beliefs)
+        max_perception_iterations:
+            - [0, 10]
+        use_qa_improve: true # Enable track 2 (QA-based improvement)
+        use_moments_improve: false # Enable track 3 (critical moment improvement)
+        # max_qa_iterations: 5              # Max improvement turns for track 2 (QA-based)
+        max_moments_iterations: 1 # Max improvement turns for track 3 (critical moments)
+        conversational_improve: true # true = multi-turn conversations per track; false = independent LLM calls (legacy)
+        max_moments_per_forward: 20 # Batch size for moment forward pass
+        max_qa_per_forward: 20 # Batch size for QA forward pass
+        max_total_moments: 20 # Cap on total accumulated critical moments
+        max_total_qa_pairs: 50 # Cap on total accumulated QA pairs
+        max_answered_qa_pairs: 40 # Stepwise EB: cap on answered QA pairs
+        max_unanswered_qa_pairs: 10 # Stepwise EB: cap on unanswered QA pairs
+        trim_unanswered_at_selection: false # Stepwise EB: if true, discard unanswered questions not selected for the experiment prompt
+        # num_experiments: 5              # (shared with explore above)
+        num_sample_obs: 3 # Sampled observations for perception validation
+        # explore_temp: 1.0               # (shared with explore above)
+        artifact_update_interval: 1 # Extract Q&A/moments every N env steps
+        improve_interval: 1 # Run 3-track improve loop every N env steps
+        experiment_interval: 1 # Generate new experiments every N env steps
+        max_steps_context_chars: 10000 # Max chars of step sequence for improvement prompts
+        max_images_context: 10 # Cap on attached prompt images for EB experiment formulation, QA extraction, and Track 1b perception updates
+        perception_history_window: 5 # Cap on #raw obs passed to perceive(observation_history)
+        perception_input_tail: 2 # Render last K raw frames in improve-prompt perception_input (earlier frames shown as elision marker)
+        hide_obs_when_image: false # If true and an image observation is available, suppress the raw text observation from agent prompts and improvement prompts (question gen, experiment formulation, QA update); perception output and aux info are still shown
+        question_gen_current_state_only: true # If true, question generation sees only the current state text/image, not recent trajectory history or history images
+        mock_mode: false # If true, short-circuit all LLM API calls: real prompts are still constructed/logged; responses are synthesized (random valid action for the agent; format-specific XML for improve/QA/experiment). stepwise_eb_learn only.
+        frozen_eval_after_learn: false # If true, run frozen no-learning evaluation after EB exploration finishes for supported envs (minihack, arc_agi).
+        frozen_eval_envs: null # null = evaluate the active env; or set a list such as ["minihack", "arc_agi"].
+        frozen_eval_max_steps: 501 # Max policy steps per frozen eval episode; env-specific max_episode_steps can still truncate earlier.
+        frozen_eval_minihack_goal: null # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
+        frozen_eval_arc_agi_goal: null # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
+        autumn_eval_after_learn: false # If true, run frozen AutumnBench test phases after EB exploration finishes.
+        autumn_eval_task_types: ["mfp", "cd", "planning"]
+        autumn_eval_max_steps: 501
+        autumn_eval_render_mode: "text" # Text is safest for MFP/CD/planning scoring; exploration can still use image mode.
+        frozen_eval_autumn_planning_goal: null # Deprecated: use eval.agent_goal_mode or eval.agent_goal_text.
+        include_policy: false
+        question_scoring_method: llm_trim # stepwise_eb_learn: question trim strategy. llm_trim | b_diff_full | b_diff_light
+        question_scoring_max_concurrent: 8 # stepwise_eb_learn: semaphore cap for B-diff scoring fan-out
+        critical_transitions_enabled: false # If true, gate improve+artifact-update (this step) and experiment-gen (next step) on a per-step LLM critical-transition decision. When false, behavior matches the fixed-interval baseline.
+        critical_id_min_for_perception: 3 # Min #critical transitions in buffer before Track 1b uses them as the sole sample source; otherwise pads with _sample_observations_from_buffer.
 
-  # openhands baseline (openhands_stepwise.py): a coding agent driven by the
-  # OpenHands SDK interacting per-step with the same set of envs used by the
-  # stepwise_eb_learn baseline. Single Conversation persists across episodes.
-  openhands:
-    n_environment_steps: 50           # Total env steps budget across all episodes (mirrors eval.evolve.n_environment_steps)
-    history_window: 50                # N entries retained in <workspace>/last_n_steps.json
-    max_iteration_per_step: 50        # Cap on OpenHands inner tool-calling iterations per env step
-    model: "anthropic/claude-sonnet-4-5-20250929"  # OpenHands LiteLLM model id
-    api_key_env: "ANTHROPIC_API_KEY"  # Env var holding the API key
-    base_url: null                    # Optional custom base URL (e.g., proxy)
-    temperature: 0.0                 # Null = use model default
-    max_output_tokens: null           # Null = use model default
-    enable_browser_tools: false       # Forward to openhands.tools.preset.default.get_default_tools
-    mock_mode: true                   # If true, skip the LLM entirely; pick a random valid action each step (smoke-test default)
-    log_llm_payloads: false           # If true, write final LiteLLM request payloads under <run>/openhands_llm_payloads
-    workspace_seed_dir: null          # Phase-2 EE: copy this dir into the run's workspace before starting (loads phase-1 artifacts)
-    workspace_checkpoint_interval: 0  # Phase-1 EE: snapshot the workspace every N global steps for intermediate-step eval (0 disables)
-    workspace_checkpoint_exclude_images: false  # If true, omit obs_images/ from workspace snapshots to bound disk use
+    # openhands baseline (openhands_stepwise.py): a coding agent driven by the
+    # OpenHands SDK interacting per-step with the same set of envs used by the
+    # stepwise_eb_learn baseline. Single Conversation persists across episodes.
+    openhands:
+        n_environment_steps: 50 # Total env steps budget across all episodes (mirrors eval.evolve.n_environment_steps)
+        history_window: 50 # N entries retained in <workspace>/last_n_steps.json
+        max_iteration_per_step: 50 # Cap on OpenHands inner tool-calling iterations per env step
+        model: "anthropic/claude-sonnet-4-5-20250929" # OpenHands LiteLLM model id
+        api_key_env: "ANTHROPIC_API_KEY" # Env var holding the API key
+        base_url: null # Optional custom base URL (e.g., proxy)
+        temperature: 1.0 # Null = use model default
+        max_output_tokens: null # Null = use model default
+        enable_browser_tools: false # Forward to openhands.tools.preset.default.get_default_tools
+        mock_mode: true # If true, skip the LLM entirely; pick a random valid action each step (smoke-test default)
+        log_llm_payloads: false # If true, write final LiteLLM request payloads under <run>/openhands_llm_payloads
+        workspace_seed_dir: null # Phase-2 EE: copy this dir into the run's workspace before starting (loads phase-1 artifacts)
+        workspace_checkpoint_interval: 0 # Phase-1 EE: snapshot the workspace every N global steps for intermediate-step eval (0 disables)
+        workspace_checkpoint_exclude_images: false # If true, omit obs_images/ from workspace snapshots to bound disk use
 
-  # simple baseline (simple_stepwise.py): a tool-less LLM agent. Mirrors the
-  # openhands baseline's per-step loop but the LLM has no workspace and no
-  # tools — it reads the current observation + valid actions and responds with
-  # its chosen action wrapped in <|ACTION|>...<|END|> tags.
-  simple:
-    n_environment_steps: 50           # Total env steps budget across all episodes
-    history_window: null              # Optional legacy override; null uses agent.max_text_history
-    max_image_history: null           # Optional legacy override; null uses agent.max_image_history
-    hide_obs_when_image: false        # If true and an image observation is available, suppress raw long-form obs text in simple-agent prompts
-    model: "anthropic/claude-sonnet-4-5-20250929"  # LiteLLM model id
-    api_key_env: "ANTHROPIC_API_KEY"  # Env var holding the API key
-    base_url: null                    # Optional custom base URL (e.g., proxy)
-    temperature: 0.0                 # Null = use model default
-    max_output_tokens: null           # Null = use model default
-    mock_mode: true                   # If true, stub litellm.completion; synthesize a random valid <action>...</action> each step
-    dynamics_history_path: null       # Phase-2 EE: load this JSON message-history into the rolling history before episode 0 (hack_argseeds phase-1 context)
-    history_checkpoint_interval: 0    # Phase-1 EE: dump the rolling history every N global steps for intermediate-step eval (0 disables)
+    # simple baseline (simple_stepwise.py): a tool-less LLM agent. Mirrors the
+    # openhands baseline's per-step loop but the LLM has no workspace and no
+    # tools — it reads the current observation + valid actions and responds with
+    # its chosen action wrapped in <|ACTION|>...<|END|> tags.
+    simple:
+        n_environment_steps: 50 # Total env steps budget across all episodes
+        history_window: null # Optional legacy override; null uses agent.max_text_history
+        max_image_history: null # Optional legacy override; null uses agent.max_image_history
+        hide_obs_when_image: false # If true and an image observation is available, suppress raw long-form obs text in simple-agent prompts
+        model: "anthropic/claude-sonnet-4-5-20250929" # LiteLLM model id
+        api_key_env: "ANTHROPIC_API_KEY" # Env var holding the API key
+        base_url: null # Optional custom base URL (e.g., proxy)
+        temperature: 1.0 # Null = use model default
+        max_output_tokens: null # Null = use model default
+        mock_mode: true # If true, stub litellm.completion; synthesize a random valid <action>...</action> each step
+        dynamics_history_path: null # Phase-2 EE: load this JSON message-history into the rolling history before episode 0 (hack_argseeds phase-1 context)
+        history_checkpoint_interval: 0 # Phase-1 EE: dump the rolling history every N global steps for intermediate-step eval (0 disables)

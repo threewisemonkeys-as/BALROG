@@ -1,4 +1,5 @@
 from nle.language_wrapper.wrappers.nle_language_wrapper import NLELanguageWrapper
+
 from goal_prompts import AGENT_GOAL_PERFORMANCE
 
 ACTIONS = {
@@ -66,7 +67,9 @@ def get_task_goal(task: str):
     elif "boxoban" in task.lower():
         goal = "You are playing Boxoban, a box-pushing game inspired by Sokoban. Your goal is to push the boulders onto the fountains on the map. You can push the boulders by walking into them, as long as there are no obstacles behind them."
     elif "lavacross" in task.lower():
-        goal = "Your goal is to cross the lava and reach the stairs down on the other side"
+        goal = (
+            "Your goal is to cross the lava and reach the stairs down on the other side"
+        )
     elif "-eat-" in task.lower():
         goal = "Your goal is to eat the food item in the level"
     elif "-pray-" in task.lower():
@@ -80,15 +83,22 @@ def get_task_goal(task: str):
 
     return goal
 
+
 def get_instruction_prompt(env, task="MiniHack-ExploreMaze-Hard-Mapped-v0"):
     available_actions = get_available_actions(env)
-    action_strings = ",\n".join(f"{action}: {description}" for action, description in available_actions.items())
+    action_strings = ",\n".join(
+        f"{action}: {description}" for action, description in available_actions.items()
+    )
     instruction_prompt = f"""
-You are an agent interacting with an environment. 
-The following are the possible actions you can take, followed by a short description of each action - 
+You are an agent interacting with an environment.
+The following are the possible actions you can take, followed by a short description of each action -
 <actions>
 {action_strings}.
 </actions>
+
+Actions may be single step or multi-step. Each part of a multi-step action must be submitted as a seperate action to the environment.
+
+You can complete the level by reaching the stairs down ('>')
 """.strip()
 
     return instruction_prompt
@@ -96,7 +106,9 @@ The following are the possible actions you can take, followed by a short descrip
 
 def get_loaded_instruction_prompt(env, load: str, task: str, goal_override: str = None):
     available_actions = get_available_actions(env)
-    action_strings = ",\n".join(f"{action}: {description}" for action, description in available_actions.items())
+    action_strings = ",\n".join(
+        f"{action}: {description}" for action, description in available_actions.items()
+    )
     goal_section = f"\n\n{goal_override.strip()}" if goal_override else ""
     instruction_prompt = f"""
 You are an agent interacting with an environment. The following are the possible actions you can take, followed by a short description of each action:
@@ -105,7 +117,7 @@ You are an agent interacting with an environment. The following are the possible
 {action_strings}.
 </actions>
 
-{ load }
+{load}
 {goal_section}
 
 PLAY!

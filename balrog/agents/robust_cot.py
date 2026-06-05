@@ -39,28 +39,39 @@ class RobustCoTAgent(BaseAgent):
         messages = self.prompt_builder.get_prompt()
 
         if self.instruction_text is not None and self.instruction_text.strip() != "":
-            messages[-1].content += "\n\n" + f"""
+            messages[-1].content += (
+                "\n\n"
+                + f"""
 World knowledge and strategy -
 {self.instruction_text}
             """.strip()
+            )
 
         # Inject experiment goal if set
         if self.experiment_goal:
-            messages[-1].content += f"\n\nCurrent experimental goal: {self.experiment_goal}"
+            messages[-1].content += (
+                "\n\n"
+                + f"""
+=== ACTIVE EXPERIMENT ===
+{self.experiment_goal}
+=== END ACTIVE EXPERIMENT ===
+
+The active experiment above is your primary focus right now. Your next action and your <plan> must be chosen specifically to execute this experiment.
+            """.strip()
+            )
 
         # Updated instructions: chain of thought + strict output format
-        messages[-1].content += "\n\n" + """
+        messages[-1].content += (
+            "\n\n"
+            + """
 First create (if not present) or update your plan from the previous steps and presented the updated plan in -
 <plan>
-<reasoning>
-thinking about what to do next and how to do it.
-</reasoning>
-<goal>
-high level subtask you are trying to achieve currently. update this as you complete subtasks, achieve goals or are given new goals.
-</goal>
 <history>
 updated history with what happened. keep this numbered and summarise the past as you go along to keep the list short.
 </history>
+<reasoning>
+thinking about what to do next and how to do it.
+</reasoning>
 <steps>
 updated next steps to achieve subtask and eventually the main task.
 </steps>
@@ -73,6 +84,7 @@ Finally you must choose exactly one of the listed actions and output it strictly
 Replace YOUR_CHOSEN_ACTION with the chosen action.
 Keep the plan very brief.
         """.strip()
+        )
 
         # Store final messages for external inspection (e.g. visualization)
         self.last_messages = messages

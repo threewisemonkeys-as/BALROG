@@ -5,7 +5,9 @@ from .base import NLELanguageWrapper
 
 
 def get_loaded_instruction_prompt(env, load: str, task: str):
-    action_strings = ",\n".join(f"{action}: {description}" for action, description in ACTIONS.items())
+    action_strings = ",\n".join(
+        f"{action}: {description}" for action, description in ACTIONS.items()
+    )
     instruction_prompt = f"""
 You are an agent playing a game. The following are the possible actions you can take in the game, followed by a short description of each action:
 
@@ -13,9 +15,9 @@ You are an agent playing a game. The following are the possible actions you can 
 
 In a moment I will present a history of actions and observations from the game.
 
-{ load }
+{load}
 
-Goal: Your goal is to get as far as possible in the game.
+Goal: Your goal is to progress as much as possible in the game.
 
 PLAY!
 """.strip()
@@ -124,7 +126,9 @@ ACTIONS = {
 
 
 def get_instruction_prompt(task=None):
-    action_strings = ",\n".join(f"{action}: {description}" for action, description in ACTIONS.items())
+    action_strings = ",\n".join(
+        f"{action}: {description}" for action, description in ACTIONS.items()
+    )
     instruction_prompt = f"""
 You are an agent interacting with an environment. The following are the possible actions you can take, followed by a short description of each action:
 

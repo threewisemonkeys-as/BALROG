@@ -89,6 +89,33 @@ def _mock_llm_response(model_id: str) -> "LLMResponse":
     )
 
 
+def _safe_openai_usage(response) -> tuple[int, int]:
+    """Extract token usage from an OpenAI-compatible response.
+
+    Some OpenRouter/OpenAI-compatible responses omit usage metadata. In that
+    case we fall back to zero counts rather than crashing the caller.
+    """
+    usage = getattr(response, "usage", None)
+    if usage is None:
+        logger.warning("LLM response did not include usage metadata; falling back to 0 tokens.")
+        return 0, 0
+    return (
+        int(getattr(usage, "prompt_tokens", 0) or 0),
+        int(getattr(usage, "completion_tokens", 0) or 0),
+    )
+
+
+def _safe_choice_text(response) -> tuple[str, str]:
+    """Return (completion_text, finish_reason) with conservative fallbacks."""
+    choices = getattr(response, "choices", None) or []
+    if not choices:
+        return "", "unknown"
+    choice = choices[0]
+    message = getattr(choice, "message", None)
+    content = getattr(message, "content", "") if message is not None else ""
+    return str(content or "").strip(), getattr(choice, "finish_reason", "unknown")
+
+
 def _iter_attachments(message):
     attachment = getattr(message, "attachment", None)
     if attachment is None:
@@ -322,14 +349,14 @@ class OpenAIWrapper(LLMClientWrapper):
         #     f"{'*' * 10} Response {'*' * 10}\n{response.choices[0].message.content.strip()}"
         # )
 
-        input_tokens = response.usage.prompt_tokens
-        output_tokens = response.usage.completion_tokens
+        input_tokens, output_tokens = _safe_openai_usage(response)
         cost = calculate_cost(self.model_id, input_tokens, output_tokens)
+        completion_text, finish_reason = _safe_choice_text(response)
 
         return LLMResponse(
             model_id=self.model_id,
-            completion=response.choices[0].message.content.strip(),
-            stop_reason=response.choices[0].finish_reason,
+            completion=completion_text,
+            stop_reason=finish_reason,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             reasoning=None,
@@ -595,14 +622,25 @@ class ClaudeWrapper(LLMClientWrapper):
 
         response = self.execute_with_retries(api_call)
 
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            logger.warning("Claude response did not include usage metadata; falling back to 0 tokens.")
+            input_tokens = 0
+            output_tokens = 0
+        else:
+            input_tokens = int(getattr(usage, "input_tokens", 0) or 0)
+            output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
         cost = calculate_cost(self.model_id, input_tokens, output_tokens)
+
+        completion_text = ""
+        if getattr(response, "content", None):
+            first_part = response.content[0]
+            completion_text = str(getattr(first_part, "text", "") or "").strip()
 
         return LLMResponse(
             model_id=self.model_id,
-            completion=response.content[0].text.strip(),
-            stop_reason=response.stop_reason,
+            completion=completion_text,
+            stop_reason=getattr(response, "stop_reason", "unknown"),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             reasoning=None,
